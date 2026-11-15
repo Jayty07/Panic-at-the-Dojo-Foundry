@@ -2,7 +2,7 @@
   "id": "panic-at-the-dojo",
   "title": "Panic at the Dojo: Patch'd Up",
   "description": "An unofficial Foundry VTT system for Panic at the Dojo 2e (Patch'd Up) by Vel Mini. Stances built from Forms and Styles, Action Dice pools, tokens, health bars, the Initiative Meter, Bar Brawl bars that float over heads in isometric scenes, and Sequencer move animations.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "compatibility": {
     "minimum": "12",
     "verified": "14"

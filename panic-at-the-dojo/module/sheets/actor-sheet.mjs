@@ -15,7 +15,7 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     window: { resizable: true },
     form: { submitOnChange: true },
     actions: {
-      tab: PatdActorSheet.#onTab,
+      patdTab: PatdActorSheet.#onTab,
       startTurn: PatdActorSheet.#onStartTurn,
       endTurn: PatdActorSheet.#onEndTurn,
       rollDice: PatdActorSheet.#onRollDice,
