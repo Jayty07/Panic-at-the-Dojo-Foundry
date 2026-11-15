@@ -349,7 +349,7 @@ class HeroBuilder extends HandlebarsApplicationMixin(ApplicationV2) {
     };
     let actor = this.actor;
     if (actor) {
-      const ok = await DialogV2.confirm({ window: { title: "Rebuild Hero?" }, content: `<p>Replace <b>${foundry.utils.escapeHTML(actor.name)}</b>'s Archetypes, Forms, Styles, Stances, Build, Skills and Super Moves with this build?</p>`, rejectClose: false });
+      const ok = await DialogV2.confirm({ window: { title: "Rebuild Hero?" }, content: `<p>Replace <b>${(foundry.utils.escapeHTML ?? ((x) => String(x).replace(/[&<>"]/g, "")))(actor.name)}</b>'s Archetypes, Forms, Styles, Stances, Build, Skills and Super Moves with this build?</p>`, rejectClose: false });
       if (!ok) return;
       const remove = actor.items.filter(i => ["archetype", "form", "style", "stance", "build", "skill", "super"].includes(i.type)).map(i => i.id);
       await actor.deleteEmbeddedDocuments("Item", remove);

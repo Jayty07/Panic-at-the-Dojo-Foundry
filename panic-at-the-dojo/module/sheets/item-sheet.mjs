@@ -1,4 +1,5 @@
 import { PATD, SYS_PATH } from "../config.mjs";
+import { pickImage } from "../helpers/stance.mjs";
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 const { ItemSheetV2 } = foundry.applications.sheets;
@@ -25,8 +26,10 @@ export class PatdItemSheet extends HandlebarsApplicationMixin(ItemSheetV2) {
     classes: ["patd", "patd-sheet", "patd-item"],
     position: { width: 600, height: 680 },
     window: { resizable: true },
-    form: { submitOnChange: true }
+    form: { submitOnChange: true },
+    actions: { editPortrait: PatdItemSheet.#onEditPortrait }
   };
+  static #onEditPortrait() { if (this.isEditable) pickImage(this.item); }
   static PARTS = { sheet: { template: `${SYS_PATH}/templates/item/item-sheet.hbs`, scrollable: [".patd-item-body"] } };
 
   async _prepareContext(options) {

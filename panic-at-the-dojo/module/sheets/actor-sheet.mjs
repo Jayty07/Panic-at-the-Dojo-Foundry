@@ -1,6 +1,6 @@
 import { PATD, SYS, SYS_PATH } from "../config.mjs";
 import { useAction, useSuper, damageDialog, esc, postCard } from "../chat.mjs";
-import { rangeLabel } from "../helpers/stance.mjs";
+import { rangeLabel, pickImage } from "../helpers/stance.mjs";
 import { socketRequest } from "../socket.mjs";
 
 const { HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -39,7 +39,8 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       resetFight: PatdActorSheet.#onResetFight,
       toggleTempArmor: PatdActorSheet.#onToggleTempArmor,
       openBuilder: PatdActorSheet.#onOpenBuilder,
-      toggleBasic: PatdActorSheet.#onToggleBasic
+      toggleBasic: PatdActorSheet.#onToggleBasic,
+      editPortrait: PatdActorSheet.#onEditPortrait
     }
   };
 
@@ -110,6 +111,22 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     return ctx;
   }
 
+  _onFirstRender(context, options) {
+    super._onFirstRender?.(context, options);
+    if ((game.release?.generation ?? 12) >= 13) return; // core handles drops on v13+
+    this.element.addEventListener("dragover", (ev) => ev.preventDefault());
+    this.element.addEventListener("drop", async (ev) => {
+      ev.preventDefault();
+      if (!this.isEditable) return;
+      const TE = foundry.applications.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+      const data = TE.getDragEventData(ev);
+      if (data?.type !== "Item") return;
+      const item = await Item.implementation.fromDropData(data);
+      if (!item || item.parent?.id === this.actor.id) return;
+      await this.actor.createEmbeddedDocuments("Item", [item.toObject()]);
+    });
+  }
+
   _onRender(context, options) {
     super._onRender?.(context, options);
     const el = this.element;
@@ -134,6 +151,8 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   /* ------------------------------------------ */
   /*  Action handlers                           */
   /* ------------------------------------------ */
+
+  static #onEditPortrait() { if (this.isEditable) pickImage(this.actor); }
 
   static #onTab(event, target) { this._activeTab = target.dataset.tab; this.render(); }
   static #onToggleBasic() { this._showBasic = !this._showBasic; this.render(); }

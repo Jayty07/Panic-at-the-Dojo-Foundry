@@ -47,3 +47,10 @@ export function buildStanceData(formIn, styleIn, { alt = "", control = "max" } =
 }
 
 export function rangeLabel(r) { return r.min === r.max ? `${r.min}` : `${r.min}-${r.max}`; }
+
+/** Image picker that works on v12 (AppV1 FilePicker) and v13+ (AppV2 FilePicker). */
+export function pickImage(doc) {
+  const FP = foundry.applications.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+  const fp = new FP({ type: "image", current: doc.img, callback: (path) => doc.update({ img: path }) });
+  return fp.render(true);
+}

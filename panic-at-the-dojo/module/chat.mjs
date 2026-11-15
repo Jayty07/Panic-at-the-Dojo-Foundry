@@ -238,9 +238,18 @@ export function effectButtons(effects) {
 /* -------------------------------------------- */
 
 export function registerChatHooks() {
-  Hooks.on("renderChatMessageHTML", (message, html) => {
-    html.querySelectorAll(".patd-fx").forEach(btn => btn.addEventListener("click", (ev) => onEffectButton(ev, message)));
-  });
+  const bind = (message, html) => {
+    const root = html instanceof HTMLElement ? html : html?.[0];
+    if (!root) return;
+    root.querySelectorAll(".patd-fx").forEach(btn => {
+      if (btn.dataset.bound) return;
+      btn.dataset.bound = "1";
+      btn.addEventListener("click", (ev) => onEffectButton(ev, message));
+    });
+  };
+  // v13+ passes an HTMLElement; v12 only has the jQuery hook.
+  if ((game.release?.generation ?? 12) >= 13) Hooks.on("renderChatMessageHTML", bind);
+  else Hooks.on("renderChatMessage", bind);
 }
 
 function speakerActor(message) {

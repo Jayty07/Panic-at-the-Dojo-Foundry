@@ -11,7 +11,8 @@ export async function loadContent() {
   const out = {};
   await Promise.all(FILES.map(async f => {
     const path = `${SYS_PATH}/data/${f}.json`;
-    const res = await fetch(foundry.utils.getRoute ? foundry.utils.getRoute(path) : path);
+    const route = foundry.utils.getRoute ?? globalThis.getRoute;
+    const res = await fetch(route ? route(path) : path);
     out[f] = await res.json();
   }));
   CACHE = out;
