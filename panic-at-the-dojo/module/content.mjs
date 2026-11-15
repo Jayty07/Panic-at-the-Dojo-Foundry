@@ -84,32 +84,43 @@ const PACKS = [
   { name: "patd-skills", label: "PatD: Skills" }
 ];
 
-export async function importCompendiums({ force = false } = {}) {
-  if (!game.user.isGM) return;
-  const c = await loadContent();
-  const CC = foundry.documents?.collections?.CompendiumCollection ?? globalThis.CompendiumCollection;
-  const data = {
-    "patd-forms": c.forms.map(formItem),
-    "patd-styles": [...c.archetypes.flatMap(a => a.styles.map(s => styleItem(s, a.name))), ...c.freestyles.map(freestyleItem)],
-    "patd-archetypes": c.archetypes.map(a => archetypeItem(a)),
-    "patd-supers": [...c.archetypes.flatMap(a => a.supers.map(s => superItem(s, a.name))), ...c.villains.map(v => superItem({ ...v.super, type: "alpha" }, v.name))],
-    "patd-builds": [...c.builds.map(buildItem), ...c.paths.map(pathItem)],
-    "patd-villains": c.villains.map(villainItem),
-    "patd-skills": c.forms.map(f => skillItem(f.skill.name, f.skill.text, `${f.name} Form`))
-  };
-  let made = 0;
-  for (const def of PACKS) {
-    const id = `world.${def.name}`;
-    let pack = game.packs.get(id);
-    if (pack && !force && pack.index.size) continue;
-    if (!pack) pack = await CC.createCompendium({ name: def.name, label: def.label, type: "Item", package: "world" });
-    if (force && pack.index.size) {
-      const ids = pack.index.map(i => i._id);
-      await Item.deleteDocuments(ids, { pack: pack.collection });
+let BUSY = false;
+
+export async function importCompendiums({ force = false, quiet = false } = {}) {
+  if (!game.user.isGM) return ui.notifications.warn("Only a GM can build the Panic at the Dojo compendiums.");
+  if (BUSY) return ui.notifications.info("Panic at the Dojo: compendiums are already being built…");
+  BUSY = true;
+  const say = (m) => { console.log(`${SYS} | ${m}`); if (!quiet) ui.notifications.info(`Panic at the Dojo: ${m}`); };
+  try {
+    say(force ? "rebuilding rules compendiums…" : "checking rules compendiums…");
+    const c = await loadContent();
+    const CC = foundry.documents?.collections?.CompendiumCollection ?? globalThis.CompendiumCollection;
+    const data = {
+      "patd-forms": c.forms.map(formItem),
+      "patd-styles": [...c.archetypes.flatMap(a => a.styles.map(s => styleItem(s, a.name))), ...c.freestyles.map(freestyleItem)],
+      "patd-archetypes": c.archetypes.map(a => archetypeItem(a)),
+      "patd-supers": [...c.archetypes.flatMap(a => a.supers.map(s => superItem(s, a.name))), ...c.villains.map(v => superItem({ ...v.super, type: "alpha" }, v.name))],
+      "patd-builds": [...c.builds.map(buildItem), ...c.paths.map(pathItem)],
+      "patd-villains": c.villains.map(villainItem),
+      "patd-skills": c.forms.map(f => skillItem(f.skill.name, f.skill.text, `${f.name} Form`))
+    };
+    const made = [], kept = [];
+    for (const def of PACKS) {
+      let pack = game.packs.get(`world.${def.name}`);
+      if (!pack) pack = await CC.createCompendium({ name: def.name, label: def.label, type: "Item" });
+      if (pack.locked) await pack.configure({ locked: false });
+      const index = await pack.getIndex();
+      if (index.size && !force) { kept.push(`${def.label} (${index.size})`); continue; }
+      if (index.size) await Item.deleteDocuments(index.map(i => i._id), { pack: pack.collection });
+      const docs = await Item.createDocuments(data[def.name], { pack: pack.collection });
+      made.push(`${def.label} (${docs.length})`);
     }
-    await Item.createDocuments(data[def.name], { pack: pack.collection });
-    made++;
-  }
-  if (made) ui.notifications.info(`Panic at the Dojo: built ${made} world compendium(s) of rules content.`);
-  await game.settings.set(SYS, "contentImported", game.system.version);
+    await game.settings.set(SYS, "contentImported", game.system.version);
+    if (made.length) say(`built ${made.join(", ")}. Open the Compendium Packs tab to find them.`);
+    if (kept.length && !made.length) say(`compendiums are already built: ${kept.join(", ")}. Look in the Compendium Packs tab (use Tools → Rebuild to overwrite).`);
+    ui.sidebar?.tabs?.compendium?.render?.();
+  } catch (err) {
+    console.error(`${SYS} | building compendiums failed`, err);
+    ui.notifications.error(`Panic at the Dojo: building compendiums failed — ${err?.message ?? err}. Press F12 for details.`, { permanent: true });
+  } finally { BUSY = false; }
 }

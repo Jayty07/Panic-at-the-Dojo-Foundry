@@ -137,7 +137,7 @@ Hooks.once("ready", async () => {
   game.patd.meterApp = new InitiativeMeterApp();
   registerSocket({ damageDialog, meter: (data, from) => Meter.handle(data, from) });
   if (game.user.isGM && game.settings.get(SYS, "autoImport") && !game.settings.get(SYS, "contentImported")) {
-    try { await content.importCompendiums(); } catch (err) { console.error(`${SYS} | content import failed`, err); }
+    await content.importCompendiums({ quiet: false });
   }
   if (game.combat?.started) game.patd.meterApp.render({ force: true });
 });
