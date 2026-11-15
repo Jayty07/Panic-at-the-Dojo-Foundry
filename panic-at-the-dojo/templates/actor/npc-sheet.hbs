@@ -1,0 +1,156 @@
+<div class="patd-npc-wrap">
+  {{!-- Compact header --}}
+  <header class="patd-npc-head">
+    <img class="patd-npc-portrait" src="{{actor.img}}" data-action="editPortrait" alt="{{actor.name}}"/>
+    <div class="patd-npc-headmain">
+      <div class="patd-npc-line1">
+        <input class="patd-npc-name" type="text" name="name" value="{{actor.name}}"/>
+        <span class="patd-chip type">{{typeLabel}}</span>
+        <label class="patd-chip lvl">LV <input type="number" name="system.level" value="{{system.level}}" min="1" max="10"/></label>
+        {{#if system.bonusDie}}<span class="patd-chip bonus" title="Bonus Die">{{system.bonusDie}}</span>{{/if}}
+      </div>
+      <div class="patd-hpbar {{#if bleeding}}bleeding{{/if}} {{#if takenOut}}out{{/if}}">
+        <div class="patd-hpbar__fill" style="width: {{hpPct}}%"></div>
+        <div class="patd-hpbar__bleed" style="left: calc({{system.bleedValue}} / {{system.hp.max}} * 100%)" title="Bleed Value {{system.bleedValue}}"></div>
+        <div class="patd-hpbar__label">HP <input type="number" name="system.hp.value" value="{{system.hp.value}}" min="0"/> / {{system.hp.max}}</div>
+      </div>
+      <div class="patd-npc-line3">
+        <span class="patd-bars" title="Health Bars (one turn each per Round)">
+          {{#each bars}}<span class="patd-pip {{#if filled}}on{{/if}} {{#if current}}cur{{/if}}"></span>{{/each}}
+          <input type="number" name="system.healthBars.value" value="{{system.healthBars.value}}" min="0" max="{{system.healthBars.max}}"/>/<input type="number" name="system.healthBars.max" value="{{system.healthBars.max}}" min="1" max="6"/>
+        </span>
+        <label class="patd-npc-stat" title="Shield (cap 8)"><i class="fa-solid fa-shield"></i><input type="number" name="system.shield.value" value="{{system.shield.value}}" min="0" max="8"/></label>
+        <span class="patd-npc-stat" title="Armor sources"><i class="fa-solid fa-helmet-safety"></i> {{armorSources}}</span>
+        <button type="button" class="patd-npc-stat patd-temp {{#if system.armor.temporary}}on{{/if}}" data-action="toggleTempArmor" title="Temporary Armor"><i class="fa-solid fa-shield-heart"></i></button>
+        <span class="patd-npc-stat" title="Range"><i class="fa-solid fa-ruler-horizontal"></i> {{range}}</span>
+        {{#if isStooges}}<label class="patd-npc-stat" title="Stooges remaining"><i class="fa-solid fa-users"></i><input type="number" name="system.members.value" value="{{system.members.value}}" min="0"/>/{{system.members.max}}</label>{{/if}}
+        {{#if bleeding}}<span class="patd-flag bleed">BLEED</span>{{/if}}{{#if dizzy}}<span class="patd-flag dizzy">DIZZY</span>{{/if}}{{#if takenOut}}<span class="patd-flag out">OUT</span>{{/if}}
+      </div>
+    </div>
+  </header>
+
+  <section class="patd-npc-body">
+    {{!-- Turn + pool --}}
+    <div class="patd-npc-turn">
+      <button type="button" data-action="startTurn" class="go" title="Start Turn: roll Action Dice"><i class="fa-solid fa-play"></i> Start</button>
+      <button type="button" data-action="endTurn" class="stop" title="End Turn"><i class="fa-solid fa-hourglass-end"></i> End</button>
+      <button type="button" data-action="takeDamage" title="Take Damage"><i class="fa-solid fa-burst"></i></button>
+      <button type="button" data-action="heal" title="Heal"><i class="fa-solid fa-heart-pulse"></i></button>
+      <button type="button" data-action="resetFight" title="Reset for a new fight"><i class="fa-solid fa-rotate"></i></button>
+      <div class="patd-npc-pool {{#if poolOver}}over{{/if}}">
+        {{#each pool}}<span class="patd-num"><input class="patd-pool-edit" type="number" data-index="{{i}}" value="{{n}}" min="0"/><a data-action="poolRemove" data-index="{{i}}"><i class="fa-solid fa-xmark"></i></a></span>{{else}}<span class="patd-empty">Pool empty</span>{{/each}}
+        <a class="patd-npc-add" data-action="poolAdd" title="Add a number"><i class="fa-solid fa-plus"></i></a>
+      </div>
+    </div>
+
+    {{!-- Tokens (compact) --}}
+    <div class="patd-npc-tokens">
+      {{#each basicTokens}}<span class="patd-npc-tok t-{{key}}" title="{{label}}"><i class="{{icon}}"></i><a data-action="tokenMinus" data-key="{{key}}">−</a><b>{{value}}</b><a data-action="tokenPlus" data-key="{{key}}">+</a></span>{{/each}}
+      {{#each statusTokens}}<span class="patd-npc-tok t-{{key}}" title="{{label}}"><i class="{{icon}}"></i><a data-action="tokenMinus" data-key="{{key}}">−</a><b>{{value}}</b><a data-action="tokenPlus" data-key="{{key}}">+</a></span>{{/each}}
+      <span class="patd-npc-tok t-challenge" title="Holding this Challenger's token"><i class="fa-solid fa-hand-point-right"></i><input type="text" name="system.challenge" value="{{system.challenge}}" placeholder="Challenger"/></span>
+    </div>
+
+    {{!-- Stance(s) --}}
+    <h3 class="patd-section gold toggle" data-action="toggleSection" data-section="stances">
+      {{#if isBoss}}Stances ({{stances.length}}/3){{else}}Stance{{/if}}
+      {{#if canAddStance}}<a class="patd-add" data-action="itemCreate" data-type="stance" title="Add Stance"><i class="fa-solid fa-plus"></i></a>{{/if}}
+    </h3>
+    {{#if open.stances}}
+    {{#each stances}}
+    <article class="patd-npc-stance {{#if active}}active{{/if}}" data-item-id="{{id}}">
+      <div class="patd-npc-stance__pick">
+        {{#unless active}}<a data-action="setStance" data-item-id="{{id}}" title="Enter this Stance"><i class="fa-regular fa-circle"></i></a>{{else}}<i class="fa-solid fa-circle-dot" title="Active Stance"></i>{{/unless}}
+        <select class="patd-stance-pick" data-item-id="{{id}}" data-field="style"><option value="">— Style —</option>
+          {{#each ../styleGroups}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}" {{#if (eq value ../../sys.styleName)}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/each}}
+        </select>
+        <select class="patd-stance-pick" data-item-id="{{id}}" data-field="form"><option value="">— Form —</option>
+          {{#each ../formOptions}}<option value="{{value}}" {{#if (eq value ../sys.formName)}}selected{{/if}}>{{label}}</option>{{/each}}
+        </select>
+        {{#if isControl}}<select class="patd-stance-pick ctl" data-item-id="{{id}}" data-field="control"><option value="max" {{#if (eq sys.control "max")}}selected{{/if}}>+3 range</option><option value="min" {{#if (eq sys.control "min")}}selected{{/if}}>min 0</option></select>{{/if}}
+        <a data-action="itemDelete" title="Delete"><i class="fa-solid fa-trash"></i></a>
+      </div>
+      {{#if sys.formName}}
+      <div class="patd-npc-stance__stats">
+        <span class="patd-npc-stance__name">{{name}}</span>
+        <span>Range {{range}}</span>
+        <span class="patd-npc-dice">{{#each dice}}<span class="patd-gem {{shape}} {{#if purple}}purple{{else}}green{{/if}} sm">{{label}}</span>{{/each}}</span>
+      </div>
+      <ul class="patd-npc-abilities">
+        {{#each sys.formAbilities}}<li class="form">{{this}}</li>{{/each}}
+        {{#each sys.styleAbilities}}<li class="style">{{this}}</li>{{/each}}
+      </ul>
+      {{/if}}
+      {{#each warnings}}<div class="patd-stance-warn">{{this}}</div>{{/each}}
+    </article>
+    {{else}}<p class="patd-empty">No Stance yet — click + and pick a Style and a Form.</p>{{/each}}
+    {{/if}}
+
+    {{!-- Actions --}}
+    <h3 class="patd-section green toggle" data-action="toggleSection" data-section="actions">Actions <small>(active Stance + Archetype)</small></h3>
+    {{#if open.actions}}
+    <div class="patd-npc-actions">
+      {{#if stance}}{{#each stance.actions}}
+      <div class="patd-npc-act"><button type="button" data-action="useAction" data-group="stance" data-idx="{{idx}}" title="Use"><i class="fa-solid fa-hand-fist"></i></button>
+        <span class="patd-cost">{{cost}}</span><b>{{name}}</b><span class="txt">{{text}}</span></div>
+      {{/each}}{{/if}}
+      {{#each archetypeActions}}
+      <div class="patd-npc-act arch"><button type="button" data-action="useAction" data-group="archetype" data-item-id="{{itemId}}" data-idx="{{idx}}" title="Use"><i class="fa-solid fa-hand-fist"></i></button>
+        <span class="patd-cost">{{cost}}</span><b>{{name}}</b><span class="txt">{{text}}</span></div>
+      {{/each}}
+      {{#each customActions}}
+      <div class="patd-npc-act"><button type="button" data-action="useAction" data-group="custom" data-item-id="{{id}}" title="Use"><i class="fa-solid fa-hand-fist"></i></button>
+        <span class="patd-cost">{{cost}}</span><b>{{name}}</b><span class="txt">{{text}}</span></div>
+      {{/each}}
+      {{#each supers}}
+      <div class="patd-npc-act super {{#if alpha}}alpha{{else}}delta{{/if}}"><button type="button" data-action="useSuper" data-item-id="{{id}}" title="Unleash"><i class="fa-solid fa-bolt"></i></button>
+        <span class="patd-cost">{{#if alpha}}α{{else}}Δ{{/if}}</span><b>{{name}}</b><span class="txt">{{sys.effect}}</span></div>
+      {{/each}}
+      <details class="patd-npc-basic"><summary>Basic Actions</summary>
+        {{#each basicActions}}
+        <div class="patd-npc-act"><button type="button" data-action="useAction" data-group="basic" data-idx="{{idx}}" title="Use"><i class="fa-solid fa-hand-fist"></i></button>
+          <span class="patd-cost">{{cost}}</span><b>{{name}}</b><span class="txt">{{text}}</span></div>
+        {{/each}}
+      </details>
+    </div>
+    {{/if}}
+
+    {{!-- Traits --}}
+    <h3 class="patd-section purple toggle" data-action="toggleSection" data-section="traits">Traits</h3>
+    {{#if open.traits}}
+    <div class="patd-npc-traits">
+      {{#each archetypes}}
+      <div class="patd-npc-trait" data-item-id="{{id}}">
+        <header><b>{{#unless villain}}Fused {{/unless}}{{name}}</b><a data-action="itemDelete" title="Remove"><i class="fa-solid fa-xmark"></i></a></header>
+        {{#each abilities}}<p>{{this}}</p>{{/each}}
+      </div>
+      {{/each}}
+      <div class="patd-picker"><span>Add Archetype</span><select class="patd-arch-add"><option value="">— choose —</option>
+        {{#each archOptions}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}">{{label}}</option>{{/each}}</optgroup>{{/each}}</select></div>
+
+      <div class="patd-picker"><span>Build</span><select class="patd-build-pick"><option value="">— none —</option>
+        {{#each buildOptions}}<option value="{{value}}" {{#if (eq value ../build.name)}}selected{{/if}}>{{label}}</option>{{/each}}</select></div>
+      {{#if build}}<div class="patd-npc-trait build">{{#each build.system.abilities}}<p>{{this}}</p>{{/each}}</div>{{/if}}
+
+      {{#unless isStooges}}
+      <div class="patd-picker"><span>Warrior's Path <small>(lv 3+)</small></span><select class="patd-path-pick"><option value="">— none —</option>
+        {{#each pathOptions}}<option value="{{value}}" {{#if (eq value ../path.name)}}selected{{/if}}>{{label}}</option>{{/each}}</select></div>
+      {{#if path}}<div class="patd-npc-trait build"><p>{{path.system.text}}</p></div>{{/if}}
+      {{/unless}}
+
+      {{#if advLine}}<p class="patd-note"><b>Level {{system.level}}:</b> {{advLine}}</p>{{/if}}
+      <div class="patd-misc">
+        <label>Extra HP per bar <input type="number" name="system.hp.bonus" value="{{system.hp.bonus}}"/></label>
+        <label>Manual Armor <input type="number" name="system.armor.sources" value="{{system.armor.sources}}" min="0"/></label>
+        <a data-action="itemCreate" data-type="super"><i class="fa-solid fa-plus"></i> Super</a>
+        <a data-action="itemCreate" data-type="action"><i class="fa-solid fa-plus"></i> Custom Action</a>
+      </div>
+    </div>
+    {{/if}}
+
+    <details class="patd-npc-notes"><summary>Notes &amp; motive</summary>
+      <label class="patd-field">Reason <input type="text" name="system.motive.reason" value="{{system.motive.reason}}"/></label>
+      <label class="patd-field">Goal <input type="text" name="system.motive.goal" value="{{system.motive.goal}}"/></label>
+      <textarea class="patd-bio" name="system.biography" rows="6">{{system.biography}}</textarea>
+    </details>
+  </section>
+</div>

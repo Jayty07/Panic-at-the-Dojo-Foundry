@@ -6,7 +6,7 @@ import { PATD, SYS, SYS_PATH } from "./module/config.mjs";
 import * as models from "./module/data/models.mjs";
 import { PatdActor } from "./module/documents/actor.mjs";
 import { PatdItem } from "./module/documents/item.mjs";
-import { PatdActorSheet, startTurnDialog, stanceCheckDialog } from "./module/sheets/actor-sheet.mjs";
+import { PatdActorSheet, PatdNpcSheet, startTurnDialog, stanceCheckDialog } from "./module/sheets/actor-sheet.mjs";
 import { PatdItemSheet } from "./module/sheets/item-sheet.mjs";
 import { PatdCombat, Meter, InitiativeMeterApp } from "./module/combat.mjs";
 import { registerChatHooks, useAction, useSuper, damageDialog, postCard } from "./module/chat.mjs";
@@ -79,13 +79,15 @@ Hooks.once("init", () => {
 
   // Sheets
   const DSC = foundry.applications.apps?.DocumentSheetConfig ?? (typeof DocumentSheetConfig !== "undefined" ? DocumentSheetConfig : undefined);
+  // Full sheet for everyone (selectable for NPCs too); compact sheet is the NPC default.
   DSC.registerSheet(Actor, SYS, PatdActorSheet, { types: ["hero", "warrior", "boss", "stooges"], makeDefault: true, label: "PATD.SheetActor" });
+  DSC.registerSheet(Actor, SYS, PatdNpcSheet, { types: ["warrior", "boss", "stooges"], makeDefault: true, label: "PATD.SheetNpc" });
   DSC.registerSheet(Item, SYS, PatdItemSheet, { makeDefault: true, label: "PATD.SheetItem" });
 
   registerSettings();
 
   const load = foundry.applications.handlebars?.loadTemplates ?? (typeof loadTemplates !== "undefined" ? loadTemplates : undefined);
-  load([`${SYS_PATH}/templates/actor/actor-sheet.hbs`, `${SYS_PATH}/templates/item/item-sheet.hbs`, `${SYS_PATH}/templates/apps/initiative-meter.hbs`, `${SYS_PATH}/templates/apps/tools.hbs`]);
+  load([`${SYS_PATH}/templates/actor/actor-sheet.hbs`, `${SYS_PATH}/templates/actor/npc-sheet.hbs`, `${SYS_PATH}/templates/item/item-sheet.hbs`, `${SYS_PATH}/templates/apps/initiative-meter.hbs`, `${SYS_PATH}/templates/apps/tools.hbs`]);
 
   Handlebars.registerHelper("patdRange", (r) => r ? (r.min === r.max ? `${r.min}` : `${r.min}-${r.max}`) : "");
   Handlebars.registerHelper("patdGate", (line) => /^\d+\+(?:,[^:]*)?:|^\d+ [A-Za-z]+(?: Tokens?)?:/i.test(line ?? ""));

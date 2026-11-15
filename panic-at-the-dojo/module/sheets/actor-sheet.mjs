@@ -1,7 +1,7 @@
 import { PATD, SYS, SYS_PATH } from "../config.mjs";
 import { useAction, useSuper, damageDialog, esc, postCard } from "../chat.mjs";
 import { rangeLabel, pickImage, buildStanceData } from "../helpers/stance.mjs";
-import { loadContent, buildItem, archetypeItem, villainItem } from "../content.mjs";
+import { loadContent, buildItem, archetypeItem, villainItem, pathItem } from "../content.mjs";
 import { socketRequest } from "../socket.mjs";
 
 const { HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -140,7 +140,10 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       bleedInfo, benefits: benefits?.map((b, i) => ({ level: i + 1, text: b, reached: i + 1 <= sys.level })),
       heroTypes: PATD.heroTypes, stanceOptions: byType("stance").map(s => ({ id: s.id, name: s.name })),
       builderAvailable: !!game.modules.get("patd-hero-builder")?.active,
-      styleGroups, formOptions, buildOptions, archOptions
+      styleGroups, formOptions, buildOptions, archOptions,
+      pathOptions: content.paths.map(p => ({ value: p.name, label: p.name })), path: byType("path")[0] ?? null,
+      maxStances: actor.type === "boss" ? 3 : (sys.level >= 6 ? 2 : 1),
+      advLine: actor.type === "hero" ? "" : PATD.warriorBenefits.slice(0, sys.level).filter(b => b !== "---").join(" · ")
     });
     ctx.stances = ctx.stances.map(s => ({ ...s, warnings: stanceWarnings(actor.items.get(s.id)) }));
     return ctx;
@@ -183,6 +186,7 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       return this.#rebuildStance(itemId, field, ev.currentTarget.value);
     }));
     el.querySelector("select.patd-build-pick")?.addEventListener("change", (ev) => { ev.stopPropagation(); return this.#setBuild(ev.currentTarget.value); });
+    el.querySelector("select.patd-path-pick")?.addEventListener("change", (ev) => { ev.stopPropagation(); return this.#setPath(ev.currentTarget.value); });
     el.querySelector("select.patd-arch-add")?.addEventListener("change", (ev) => { ev.stopPropagation(); return this.#addArchetype(ev.currentTarget.value); });
     el.querySelectorAll("select.patd-archetype-mode").forEach(sel => sel.addEventListener("change", async (ev) => {
       const item = this.actor.items.get(ev.currentTarget.dataset.itemId);
@@ -230,6 +234,14 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const old = this.actor.items.filter(i => i.type === "build").map(i => i.id);
     if (old.length) await this.actor.deleteEmbeddedDocuments("Item", old);
     await this.actor.createEmbeddedDocuments("Item", [buildItem(b)]);
+  }
+
+  async #setPath(name) {
+    const c = await loadContent();
+    const old = this.actor.items.filter(i => i.type === "path").map(i => i.id);
+    if (old.length) await this.actor.deleteEmbeddedDocuments("Item", old);
+    const p = c.paths.find(x => x.name === name);
+    if (p) await this.actor.createEmbeddedDocuments("Item", [pathItem(p)]);
   }
 
   async #addArchetype(value) {
@@ -363,6 +375,35 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   }
   static async #onToggleTempArmor() { await this.actor.update({ "system.armor.temporary": !this.actor.system.armor.temporary }); }
   static #onOpenBuilder() { game.modules.get("patd-hero-builder")?.api?.open(this.actor); }
+}
+
+/* -------------------------------------------- */
+/*  Compact NPC sheet (Warriors, Bosses, Stooges)*/
+/* -------------------------------------------- */
+
+export class PatdNpcSheet extends PatdActorSheet {
+  static DEFAULT_OPTIONS = {
+    classes: ["patd-npc"],
+    position: { width: 640, height: 760 },
+    actions: { toggleSection: PatdNpcSheet.#onToggleSection }
+  };
+  static PARTS = {
+    sheet: { template: `${SYS_PATH}/templates/actor/npc-sheet.hbs`, scrollable: [".patd-npc-body"] }
+  };
+  _open = { stances: true, actions: true, traits: true };
+
+  async _prepareContext(options) {
+    const ctx = await super._prepareContext(options);
+    ctx.open = this._open;
+    ctx.canAddStance = ctx.stances.length < ctx.maxStances;
+    return ctx;
+  }
+
+  static #onToggleSection(event, target) {
+    const k = target.dataset.section;
+    this._open[k] = !this._open[k];
+    this.render();
+  }
 }
 
 /* -------------------------------------------- */

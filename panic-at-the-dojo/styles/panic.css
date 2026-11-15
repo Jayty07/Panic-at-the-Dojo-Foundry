@@ -476,3 +476,75 @@ button.patd-meter-open, button.patd-import { margin: 4px; flex: 0 0 auto; width:
 .patd.patd-sheet .patd-tokens { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .patd.patd-sheet .patd-option-card header select { flex: 0 0 auto !important; width: auto !important; height: 20px !important; }
 .patd.patd-sheet .patd-option-card header .patd-item-ctl { margin-left: auto; }
+
+/* =====================================================================
+   Compact NPC sheet
+   ===================================================================== */
+.patd-npc-wrap { display: flex; flex-direction: column; height: 100%; }
+.patd-npc-head { display: flex; gap: 10px; padding: 8px 10px; color: #fff; border-bottom: 3px solid var(--patd-ink);
+  background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.5)),
+    repeating-linear-gradient(0deg, transparent 0 18px, rgba(0,0,0,.35) 18px 20px),
+    repeating-linear-gradient(90deg, transparent 0 38px, rgba(0,0,0,.3) 38px 40px),
+    linear-gradient(135deg, #3a1530, #5a1b2b 50%, #2a0f22); }
+.patd-npc-portrait { width: 76px; height: 76px; object-fit: cover; border: 3px solid #fff; border-radius: 5px; box-shadow: 3px 3px 0 var(--patd-ink); cursor: pointer; flex: none; background: #222; }
+.patd-npc-headmain { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.patd-npc-line1 { display: flex; gap: 6px; align-items: center; }
+.patd.patd-sheet input.patd-npc-name { flex: 1 1 auto !important; width: auto !important; height: 30px !important; font-family: var(--patd-comic); font-size: 1.5rem; text-align: left;
+  background: rgba(10,10,20,.55) !important; color: #fff !important; border: 2px solid var(--patd-neon-pink) !important; border-radius: 6px; text-shadow: 0 0 6px var(--patd-neon-pink); padding: 0 8px; }
+.patd-npc-head .patd-hpbar { height: 24px; }
+.patd-npc-line3 { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.patd-npc-stat { display: inline-flex; align-items: center; gap: 3px; background: rgba(0,0,0,.45); border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 1px 6px; font-size: .82rem; color: #fff; }
+.patd.patd-sheet .patd-npc-stat input[type="number"] { width: 32px !important; height: 20px !important; }
+.patd.patd-sheet button.patd-npc-stat { width: auto; height: 24px; line-height: 20px; }
+.patd-npc-head .patd-flag { font-size: .85rem; padding: 0 6px; }
+.patd-npc-body { flex: 1; overflow-y: auto; padding: 8px 10px 14px; }
+.patd-npc-turn { display: flex; gap: 5px; align-items: center; margin-bottom: 6px; }
+.patd.patd-sheet .patd-npc-turn > button { flex: 0 0 auto; width: auto; height: 30px; padding: 0 8px; border: 2px solid var(--patd-ink); border-radius: 4px; box-shadow: 2px 2px 0 var(--patd-ink); background: #fff; color: var(--patd-ink); font-size: .78rem; }
+.patd-npc-turn > button.go { background: var(--patd-green-lt); }
+.patd-npc-turn > button.stop { background: var(--patd-red-lt); }
+.patd-npc-pool { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 5px; min-height: 38px; padding: 3px 6px; border: 2px solid var(--patd-ink); border-radius: 5px;
+  background: linear-gradient(90deg, var(--patd-green-lt), var(--patd-green-lt2)); }
+.patd-npc-pool.over { background: var(--patd-red-lt); }
+.patd.patd-sheet .patd-npc-pool .patd-num input[type="number"] { width: 34px !important; height: 32px !important; flex: 0 0 34px !important; font-size: 1.25rem !important; }
+.patd-npc-add { margin-left: auto; cursor: pointer; }
+.patd-npc-tokens { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.patd-npc-tok { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border: 2px solid var(--patd-ink); border-radius: 12px; background: #fff; font-size: .8rem; }
+.patd-npc-tok a { cursor: pointer; font-weight: bold; padding: 0 2px; }
+.patd-npc-tok b { font-family: var(--patd-comic); font-size: 1.1rem; min-width: 14px; text-align: center; }
+.patd-npc-tok.t-iron { background: #dfe6ee; } .patd-npc-tok.t-power { background: #ffd2cb; } .patd-npc-tok.t-speed { background: #d3ffe0; }
+.patd-npc-tok.t-burning { background: #ffd6a6; } .patd-npc-tok.t-fatigue { background: #e6dbff; } .patd-npc-tok.t-weakness { background: #d4f2ff; }
+.patd-npc-tok.t-challenge { background: #fff1a8; flex: 1 1 140px; }
+.patd.patd-sheet .patd-npc-tok.t-challenge input { width: 100% !important; flex: 1 1 auto !important; height: 20px !important; text-align: left; }
+.patd-npc-stance { border: 2px solid var(--patd-ink); border-radius: 5px; margin-bottom: 6px; overflow: hidden; box-shadow: 2px 2px 0 var(--patd-ink); background: #fffdf3; }
+.patd-npc-stance.active { box-shadow: 0 0 0 2px var(--patd-gold), 2px 2px 0 var(--patd-ink); }
+.patd-npc-stance__pick { display: flex; gap: 5px; align-items: center; padding: 4px 6px; background: #fff3c4; }
+.patd.patd-sheet .patd-npc-stance__pick select { flex: 1 1 120px !important; width: auto !important; height: 24px !important; min-width: 0; }
+.patd.patd-sheet .patd-npc-stance__pick select.ctl { flex: 0 0 90px !important; }
+.patd-npc-stance__pick a, .patd-npc-stance__pick i { cursor: pointer; color: var(--patd-gold-dk); }
+.patd-npc-stance__stats { display: flex; gap: 10px; align-items: center; padding: 3px 8px; color: #fff; background: linear-gradient(90deg, var(--patd-gold-dk), var(--patd-gold)); font-weight: bold; font-size: .82rem; }
+.patd-npc-stance__name { font-family: var(--patd-comic); font-size: 1.15rem; letter-spacing: .5px; text-shadow: 1px 1px 0 #000; flex: 1; }
+.patd-npc-dice { display: inline-flex; gap: 3px; }
+.patd-gem.sm { width: 26px; height: 26px; font-size: .7rem; }
+.patd-npc-abilities { margin: 0; padding: 4px 8px 4px 22px; font-size: .8rem; }
+.patd-npc-abilities li.form::marker { color: var(--patd-blue); }
+.patd-npc-abilities li.style::marker { color: var(--patd-red); }
+.patd-npc-actions { display: flex; flex-direction: column; gap: 3px; }
+.patd-npc-act { display: flex; gap: 6px; align-items: baseline; padding: 3px 6px; border-radius: 3px; font-size: .8rem; background: linear-gradient(90deg, var(--patd-green-lt), #d8ffe5); border-left: 4px solid var(--patd-green); }
+.patd-npc-act.arch { background: linear-gradient(90deg, var(--patd-pink), #f3e3ff); border-left-color: var(--patd-purple); }
+.patd-npc-act.super.alpha { background: linear-gradient(90deg, #5c1050, #2a1128); color: #fff; border-left-color: var(--patd-alpha); }
+.patd-npc-act.super.delta { background: linear-gradient(90deg, #0d4c5c, #15404b); color: #fff; border-left-color: var(--patd-delta); }
+.patd.patd-sheet .patd-npc-act button { flex: 0 0 26px; width: 26px; height: 22px; line-height: 18px; padding: 0; border: 1px solid #000; border-radius: 3px; background: #fff; color: var(--patd-green); }
+.patd-npc-act .patd-cost { flex: none; background: var(--patd-green); color: #fff; font-weight: bold; }
+.patd-npc-act.arch .patd-cost { background: var(--patd-purple); }
+.patd-npc-act b { flex: none; }
+.patd-npc-act .txt { white-space: pre-line; }
+.patd-npc-basic summary, .patd-npc-notes summary { cursor: pointer; font-weight: bold; color: var(--patd-green); margin: 4px 0; }
+.patd-npc-notes summary { color: var(--patd-gold-dk); margin-top: 10px; }
+.patd-npc-traits { display: flex; flex-direction: column; gap: 4px; }
+.patd-npc-trait { border: 2px solid var(--patd-ink); border-radius: 4px; overflow: hidden; font-size: .8rem; }
+.patd-npc-trait header { display: flex; justify-content: space-between; padding: 2px 8px; color: #fff; background: linear-gradient(90deg, var(--patd-purple), #af7dbe); }
+.patd-npc-trait header a { color: #fff; cursor: pointer; }
+.patd-npc-trait p { margin: 0; padding: 2px 8px; background: linear-gradient(90deg, #fcd2ff, #efe5ff); }
+.patd-npc-trait.build p { background: #fde3ff; }
+.patd-npc-traits .patd-misc a { cursor: pointer; font-weight: bold; color: var(--patd-purple); }
+.patd.patd-sheet .patd-npc-notes input[type="text"] { flex: 1 1 auto !important; width: auto !important; }
