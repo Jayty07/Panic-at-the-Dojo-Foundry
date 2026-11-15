@@ -1,0 +1,60 @@
+<div class="patd-meter-wrap">
+  {{#if none}}
+    <div class="patd-meter-empty">
+      <p class="comic big">NO FIGHT YET</p>
+      <p>Create an encounter in the Combat Tracker, add combatants and press Begin Combat. The meter builds itself from everyone's Health Bars.</p>
+      <p class="patd-note">Cinematic Weight: <b>{{weight.label}}</b> ({{weight.hp}} HP · Heal {{weight.heal}} · Bleed {{weight.bleed}})</p>
+      {{#if isGM}}<button type="button" data-action="setup"><i class="fa-solid fa-sliders"></i> Fight Setup</button>{{/if}}
+    </div>
+  {{else}}
+    <header class="patd-meter-head">
+      <span class="patd-round comic">ROUND {{round}}</span>
+      <span class="patd-weight"><i class="fa-solid fa-weight-hanging"></i> {{weight.label}} · Heal {{weight.heal}} · Bleed {{weight.bleed}}</span>
+      {{#if isGM}}<span class="patd-meter-gm">
+        <a data-action="setup" title="Fight Setup"><i class="fa-solid fa-sliders"></i></a>
+        <a data-action="rebuild" title="Rebuild this Round's slots"><i class="fa-solid fa-arrows-rotate"></i></a>
+        <a data-action="newRound" title="Start next Round"><i class="fa-solid fa-forward"></i></a>
+        <a data-action="resetFighters" title="Reset fighters"><i class="fa-solid fa-heart-circle-plus"></i></a>
+      </span>{{/if}}
+    </header>
+    {{#if params.victory}}<p class="patd-params">{{#if params.arena}}<b>Arena:</b> {{params.arena}} · {{/if}}{{#if params.tiltHeroes}}<b>Heroes tilted:</b> {{params.tiltHeroes}} · {{/if}}{{#if params.tiltEnemies}}<b>Enemies tilted:</b> {{params.tiltEnemies}} · {{/if}}<b>Victory:</b> {{params.victory}}{{#if fightGoesOn}} · The Fight Must Go On!{{/if}}</p>{{/if}}
+
+    {{#unless started}}<p class="patd-note">Press <b>Begin Combat</b> in the Combat Tracker to build the meter.</p>{{/unless}}
+
+    <ol class="patd-slots">
+      {{#each slots}}
+      <li class="patd-slot side-{{side}} {{#if current}}current{{/if}} {{#if done}}done{{/if}}" title="{{label}}">
+        {{#if img}}<img src="{{img}}" alt="{{name}}"/>{{else}}<span class="patd-slot__side">{{label}}</span>{{/if}}
+      </li>
+      {{/each}}
+    </ol>
+
+    {{#if slot}}
+    <div class="patd-now side-{{slot.side}}">
+      {{#if active}}
+        <span class="comic">{{active.name}}'s TURN</span>
+        {{#if active.owner}}<button type="button" data-action="endTurn"><i class="fa-solid fa-hourglass-end"></i> End Turn</button>{{/if}}
+      {{else}}
+        <span class="comic">{{slotLabel}} TURN — who's up?</span>
+      {{/if}}
+    </div>
+    {{/if}}
+
+    <ul class="patd-fighters">
+      {{#each fighters}}
+      <li class="patd-fighter side-{{side}} {{#if active}}active{{/if}} {{#if out}}out{{/if}}">
+        <img src="{{img}}" data-action="openSheet" data-combatant-id="{{id}}" alt=""/>
+        <div class="patd-fighter__info">
+          <b>{{name}}</b> <small class="patd-side-tag" {{#if ../isGM}}data-action="cycleSide" data-combatant-id="{{id}}" title="Click to change side"{{/if}}>{{sideLabel}}</small>
+          <div class="patd-fighter__hp"><span class="bar" style="--pct: {{hp}}; --max: {{hpMax}}"></span>{{hp}}/{{hpMax}} · Bars {{bars}}/{{barsMax}} {{#if bleeding}}<em class="bleed">Bleeding</em>{{/if}}{{#if out}}<em class="out">Out</em>{{/if}}</div>
+          <small>{{stance}}</small>
+        </div>
+        <span class="patd-turns" title="Turns left this Round">{{remaining}}</span>
+        {{#if canTake}}<button type="button" data-action="take" data-combatant-id="{{id}}"><i class="fa-solid fa-hand-fist"></i> Take Turn</button>{{/if}}
+      </li>
+      {{/each}}
+    </ul>
+    {{#if supers.length}}<p class="patd-note">Supers this Round: {{#each supers}}{{label}} {{v}}/{{max}} {{/each}}</p>{{/if}}
+    {{#if isGM}}<p class="patd-note">GM: Shift-click <b>Take Turn</b> to ignore side and turn limits. Click a side tag to move a fighter to another side.</p>{{/if}}
+  {{/if}}
+</div>

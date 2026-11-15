@@ -1,0 +1,155 @@
+<div class="hb-wrap">
+  <header class="hb-head">
+    <div class="hb-sign"><span class="p">PANIC</span><span class="a">AT THE</span><span class="d">DOJO</span></div>
+    <ol class="hb-steps">
+      {{#each steps}}<li class="{{#if active}}active{{/if}} {{#if done}}done{{/if}}" data-action="goto" data-step="{{i}}"><span>{{label}}</span></li>{{/each}}
+    </ol>
+  </header>
+
+  <section class="hb-main">
+  {{#if is.basics}}
+    <h2 class="hb-title">Meet your Hero</h2>
+    <div class="hb-row">
+      <label class="hb-field grow">Name <input type="text" name="name" value="{{s.name}}" placeholder="Redd, Hollow, Truth…"/></label>
+      <label class="hb-field">Portrait <input type="text" name="img" value="{{s.img}}" placeholder="path/to/art.webp"/></label>
+      <label class="hb-field small">Level <input type="number" name="level" value="{{s.level}}" min="1" max="10"/></label>
+    </div>
+    <div class="hb-types">
+      {{#each types}}
+      <article class="hb-type {{key}} {{#if chosen}}chosen{{/if}}" data-action="pick" data-field="heroType" data-value="{{key}}">
+        <h3>{{label}}</h3><p>{{blurb}}</p>
+      </article>
+      {{/each}}
+    </div>
+    <div class="hb-row">
+      <label class="hb-field grow">Why do you fight? (reason) <input type="text" name="reason" value="{{s.reason}}" placeholder="“They've got our money, and I need that money real bad.”"/></label>
+      <label class="hb-field grow">What do you want? (goal) <input type="text" name="goal" value="{{s.goal}}"/></label>
+    </div>
+    <p class="hb-note">Level 1 is a complete Hero. Higher levels add a Bonus Die, extra HP, Super Moves, extra Stances and Archetypes.</p>
+  {{/if}}
+
+  {{#if is.archetypes}}
+    <h2 class="hb-title">Choose {{needArch}} Archetype{{#if (hbgt needArch 1)}}s{{/if}} <small>{{typeInfo.label}} Abilities shown</small></h2>
+    <div class="hb-arch-grid">
+      {{#each archetypes}}
+      <article class="hb-arch {{#if chosen}}chosen{{/if}}" data-action="pick" data-field="archetype" data-value="{{name}}">
+        <header><span>{{name}}</span><small>{{keywords.[0]}} · {{keywords.[1]}}</small></header>
+        <div class="hb-arch__ab">{{#each abilities}}<p>{{this}}</p>{{/each}}</div>
+        <footer>{{#each styles}}<span>{{name}}</span>{{/each}}</footer>
+      </article>
+      {{/each}}
+    </div>
+    {{#if extraSlots}}
+    <h3 class="hb-sub">Extra Fused Archetype{{#if (hbgt extraSlots 1)}}s{{/if}} (level {{s.level}}: {{extraSlots}})</h3>
+    <div class="hb-chips">{{#each archetypes}}{{#unless chosen}}<a class="hb-chip {{#if extra}}on{{/if}}" data-action="pick" data-field="extraArchetype" data-value="{{name}}">{{name}}</a>{{/unless}}{{/each}}</div>
+    {{/if}}
+  {{/if}}
+
+  {{#if is.stances}}
+    {{#if (eq s.heroType "frantic")}}
+      <h2 class="hb-title">Three Styles, three Forms <small>One Style from each Archetype — you build a Stance each turn</small></h2>
+      <div class="hb-frantic">
+        {{#each franticRows}}
+        <div class="hb-frantic-row">
+          <span class="hb-arch-tag">{{#if arch}}{{arch}}{{else}}Archetype{{/if}}</span>
+          <select name="frantic.styles.{{i}}"><option value="">— Style —</option>
+            {{#each styleGroups}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}" {{#if (eq value ../../style)}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/each}}
+          </select>
+          <select name="frantic.forms.{{i}}"><option value="">— Form —</option>
+            {{#each ../formOpts}}<option value="{{value}}" {{#if (eq value ../form)}}selected{{/if}}>{{label}}</option>{{/each}}
+          </select>
+        </div>
+        <div class="hb-cards">
+          {{#if styleCard}}{{> hbStyle styleCard}}{{/if}}
+          {{#if formCard}}{{> hbForm formCard}}{{/if}}
+        </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <h2 class="hb-title">Create your Stances <small>Style + Form = “Style Form Stance”. Each Form and Style must be different.</small></h2>
+      {{#each stances}}
+      <div class="hb-stance">
+        <div class="hb-stance__row">
+          <span class="hb-num">{{n}}</span>
+          <select name="stances.{{i}}.style"><option value="">— Style —</option>
+            {{#each ../styleGroups}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}" {{#if (eq value ../../style)}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/each}}
+          </select>
+          <select name="stances.{{i}}.form"><option value="">— Form —</option>
+            {{#each ../formOpts}}<option value="{{value}}" {{#if (eq value ../form)}}selected{{/if}}>{{label}}</option>{{/each}}
+          </select>
+          {{#if altOptions.length}}<select name="stances.{{i}}.alt" title="Form name used in the Stance name">
+            {{#each altOptions}}<option value="{{this}}" {{#if (eq this ../alt)}}selected{{/if}}>{{this}}</option>{{/each}}</select>{{/if}}
+          {{#if isControl}}<select name="stances.{{i}}.control"><option value="max" {{#if (eq control "max")}}selected{{/if}}>Control: +3 max range</option><option value="min" {{#if (eq control "min")}}selected{{/if}}>Control: min range 0</option></select>{{/if}}
+          {{#if (hbgt i 2)}}<a class="hb-x" data-action="removeStance" data-index="{{i}}"><i class="fa-solid fa-xmark"></i></a>{{/if}}
+        </div>
+        {{#if preview}}<div class="hb-preview"><span class="hb-stance-name">{{preview.name}}</span> · Range {{preview.system.range.min}}{{#unless (eq preview.system.range.min preview.system.range.max)}}-{{preview.system.range.max}}{{/unless}} · Dice {{#each preview.system.dice}}<span class="hb-die {{#if purple}}purple{{/if}}">{{die}}</span>{{/each}}</div>{{/if}}
+        <div class="hb-cards">
+          {{#if styleCard}}{{> hbStyle styleCard}}{{/if}}
+          {{#if formCard}}{{> hbForm formCard}}{{/if}}
+        </div>
+      </div>
+      {{/each}}
+      {{#if canAddStance}}<button type="button" class="hb-add" data-action="addStance"><i class="fa-solid fa-plus"></i> Add Stance (level {{s.level}} allows {{stanceSlots}})</button>{{/if}}
+    {{/if}}
+  {{/if}}
+
+  {{#if is.build}}
+    <h2 class="hb-title">Choose a Build <small>Your body and who you are. Triggers when you Bleed.</small></h2>
+    <div class="hb-build-grid">
+      {{#each builds}}
+      <article class="hb-build {{#if chosen}}chosen{{/if}}" data-action="pick" data-field="build" data-value="{{name}}">
+        <header>{{name}}</header><p class="flavor">{{flavor}}</p>{{#each abilities}}<p>{{this}}</p>{{/each}}
+      </article>
+      {{/each}}
+    </div>
+    <article class="hb-bleed"><header>{{bleed.name}}</header><p>{{bleed.text}}</p></article>
+  {{/if}}
+
+  {{#if is.skills}}
+    <h2 class="hb-title">Skills <small>Three from your Forms. You may trade one. Then a two-word description.</small></h2>
+    <div class="hb-skill-grid">
+      {{#each skills}}<article class="hb-skill"><header>{{name}}</header><p>{{text}}</p></article>{{/each}}
+    </div>
+    <div class="hb-row">
+      <label class="hb-field">Trade away <select name="replaceSkill"><option value="">— keep all three —</option>{{#each skills}}<option value="{{name}}" {{#if (eq name ../s.replaceSkill)}}selected{{/if}}>{{name}}</option>{{/each}}</select></label>
+      {{#if s.replaceSkill}}
+      <label class="hb-field">…for <select name="replaceWith"><option value="">— custom —</option>{{#each replaceOptions}}<option value="{{this}}" {{#if (eq this ../s.replaceWith)}}selected{{/if}}>{{this}}</option>{{/each}}</select></label>
+      {{#unless s.replaceWith}}<label class="hb-field grow">Custom Skill <input type="text" name="customSkill" value="{{s.customSkill}}" placeholder="Name"/></label>
+      <label class="hb-field grow">What it lets you do <input type="text" name="customSkillText" value="{{s.customSkillText}}"/></label>{{/unless}}
+      {{/if}}
+    </div>
+    <label class="hb-field big">Two-word description (your fourth Skill) <input type="text" name="description" value="{{s.description}}" placeholder="Eccentric Gambler · Terrified Clerk · Enraged Wrestler"/></label>
+  {{/if}}
+
+  {{#if is.supers}}
+    <h2 class="hb-title">Super Moves <small>Choose {{superSlots}} from your Archetypes. Cost: two matching numbers of 3+.</small></h2>
+    <div class="hb-super-grid">
+      {{#each superOpts}}
+      <article class="hb-super {{type}} {{#if chosen}}chosen{{/if}}" data-action="pick" data-field="super" data-value="{{name}}">
+        <header><span>{{name}}</span><em>{{#if (eq type "alpha")}}α{{else}}Δ{{/if}} Super · {{archetype}}</em></header>
+        <p>{{effect}}</p>
+      </article>
+      {{/each}}
+    </div>
+  {{/if}}
+
+  {{#if is.review}}
+    <h2 class="hb-title">{{s.name}} <small>{{summary.title}}</small></h2>
+    <div class="hb-review">
+      <div><h4>Stances</h4><ul>{{#each summary.stances}}<li>{{this}}</li>{{/each}}</ul></div>
+      <div><h4>Build</h4><p>{{summary.build}}</p><h4>Skills</h4><ul>{{#each summary.skills}}<li>{{this}}</li>{{/each}}<li><b>{{summary.description}}</b></li></ul></div>
+      <div>{{#if summary.supers.length}}<h4>Super Moves</h4><ul>{{#each summary.supers}}<li>{{this}}</li>{{/each}}</ul>{{/if}}
+        <h4>Level</h4><p>{{s.level}}</p></div>
+    </div>
+    {{#if (eq s.heroType "frantic")}}<p class="hb-note">Frantic Heroes get every Style × Form pairing as a Stance so you can assemble a new one each turn (you can't reuse last turn's Ability, Style or Form).</p>{{/if}}
+  {{/if}}
+  </section>
+
+  <footer class="hb-foot">
+    <div class="hb-errs">{{#each errs}}<p><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</p>{{/each}}</div>
+    <button type="button" data-action="randomize" title="Random Hero"><i class="fa-solid fa-dice"></i></button>
+    {{#unless first}}<button type="button" data-action="prev"><i class="fa-solid fa-chevron-left"></i> Back</button>{{/unless}}
+    {{#if last}}<button type="button" class="hb-go" data-action="create"><i class="fa-solid fa-hand-fist"></i> {{#if applyTo}}Rebuild {{applyTo}}{{else}}Create Hero{{/if}}</button>
+    {{else}}<button type="button" class="hb-go" data-action="next">Next <i class="fa-solid fa-chevron-right"></i></button>{{/if}}
+  </footer>
+</div>

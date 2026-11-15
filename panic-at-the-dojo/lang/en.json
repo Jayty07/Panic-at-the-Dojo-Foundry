@@ -1,0 +1,10 @@
+{
+  "TYPES": {
+    "Actor": { "hero": "Hero", "warrior": "Warrior", "boss": "Boss", "stooges": "Stooges" },
+    "Item": { "stance": "Stance", "form": "Form", "style": "Style", "archetype": "Archetype", "build": "Build", "super": "Super Move", "skill": "Skill", "action": "Action", "path": "Warrior's Path" }
+  },
+  "PATD": {
+    "SheetActor": "Panic at the Dojo Fighter",
+    "SheetItem": "Panic at the Dojo Item"
+  }
+}

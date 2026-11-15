@@ -1,0 +1,103 @@
+<div class="patd-item-wrap patd-item--{{type}}">
+  <header class="patd-item-head">
+    <img src="{{item.img}}" data-edit="img" data-action="editImage" alt=""/>
+    <div>
+      <input class="patd-item-name" type="text" name="name" value="{{item.name}}"/>
+      <span class="patd-chip type">{{typeLabel}}</span>
+    </div>
+  </header>
+  <section class="patd-item-body">
+
+  {{#if is.form}}
+    <div class="patd-grid3">
+      <label>Alt names <input type="text" name="virtual.altNames" value="{{text.altNames}}"/></label>
+      <label>Keywords <input type="text" name="virtual.keywords" value="{{text.keywords}}"/></label>
+      <label>Action Dice <input type="text" name="virtual.dice" value="{{text.dice}}" title="Space separated. Mark Purple dice with * (e.g. d8* d8 d8). Preset numbers allowed (5)."/></label>
+    </div>
+    <label class="patd-block form">Form Abilities (one per line)<textarea name="virtual.abilities" rows="5">{{text.abilities}}</textarea></label>
+    <label class="patd-block action">Unique Actions (“COST: Name” then text; blank line between Actions)<textarea name="virtual.actions" rows="9">{{text.actions}}</textarea></label>
+    <div class="patd-grid2 skill"><label>Skill <input type="text" name="system.skill.name" value="{{system.skill.name}}"/></label><label>Skill text <input type="text" name="system.skill.text" value="{{system.skill.text}}"/></label></div>
+    <label class="patd-block">Description<textarea name="system.description" rows="6">{{system.description}}</textarea></label>
+  {{/if}}
+
+  {{#if is.style}}
+    <div class="patd-grid3">
+      <label>Archetype <input type="text" name="system.archetype" value="{{system.archetype}}"/></label>
+      <label>Keyword <select name="system.keyword">{{selectOptions keywordOptions selected=system.keyword blank=""}}</select></label>
+      <label>Range <span class="patd-range-in"><input type="number" name="system.range.min" value="{{system.range.min}}" min="0"/>–<input type="number" name="system.range.max" value="{{system.range.max}}" min="0"/></span></label>
+    </div>
+    <div class="patd-grid3">
+      <label><input type="checkbox" name="system.freestyle" {{checked system.freestyle}}/> Freestyle</label>
+      {{#if system.freestyle}}<label>Banned Form <input type="text" name="system.banned" value="{{system.banned}}"/></label>
+      <label>Purple Dice <input type="text" name="virtual.dice" value="{{text.dice}}"/></label>{{/if}}
+    </div>
+    <label class="patd-block style">Style Abilities (one per line)<textarea name="virtual.abilities" rows="6">{{text.abilities}}</textarea></label>
+    <label class="patd-block action">Unique Actions<textarea name="virtual.actions" rows="9">{{text.actions}}</textarea></label>
+    <label class="patd-block">Recommended Stances<textarea name="system.recommended" rows="3">{{system.recommended}}</textarea></label>
+    <label class="patd-block">Description<textarea name="system.description" rows="5">{{system.description}}</textarea></label>
+  {{/if}}
+
+  {{#if is.stance}}
+    <div class="patd-grid3">
+      <label>Style <input type="text" name="system.styleName" value="{{system.styleName}}"/></label>
+      <label>Form <input type="text" name="system.formName" value="{{system.formName}}"/></label>
+      <label>Form name used <input type="text" name="system.formAlt" value="{{system.formAlt}}"/></label>
+    </div>
+    <div class="patd-grid3">
+      <label>Archetype <input type="text" name="system.archetype" value="{{system.archetype}}"/></label>
+      <label>Range <span class="patd-range-in"><input type="number" name="system.range.min" value="{{system.range.min}}" min="0"/>–<input type="number" name="system.range.max" value="{{system.range.max}}" min="0"/></span></label>
+      <label>Armor sources <input type="number" name="system.armor" value="{{system.armor}}" min="0"/></label>
+    </div>
+    <label>Action Dice <input type="text" name="virtual.dice" value="{{text.dice}}" title="Mark Purple dice with *"/></label>
+    <label class="patd-block form">Form Abilities<textarea name="virtual.formAbilities" rows="5">{{text.formAbilities}}</textarea></label>
+    <label class="patd-block style">Style Abilities<textarea name="virtual.styleAbilities" rows="5">{{text.styleAbilities}}</textarea></label>
+    <label class="patd-block action">Unique Actions<textarea name="virtual.actions" rows="10">{{text.actions}}</textarea></label>
+    <label class="patd-block">Notes<textarea name="system.notes" rows="3">{{system.notes}}</textarea></label>
+  {{/if}}
+
+  {{#if is.archetype}}
+    <div class="patd-grid3">
+      <label>Keywords <input type="text" name="virtual.keywords" value="{{text.keywords}}"/></label>
+      <label>Ability used <select name="system.mode">{{selectOptions modes selected=system.mode}}</select></label>
+      <label><input type="checkbox" name="system.villain" {{checked system.villain}}/> Villain Archetype</label>
+    </div>
+    {{#if system.villain}}
+      <label class="patd-block option">Abilities<textarea name="virtual.abilities" rows="5">{{text.abilities}}</textarea></label>
+    {{else}}
+      <label class="patd-block option">Focused Ability<textarea name="virtual.focused" rows="4">{{text.focused}}</textarea></label>
+      <label class="patd-block option">Fused Ability<textarea name="virtual.fused" rows="4">{{text.fused}}</textarea></label>
+      <label class="patd-block option">Frantic Ability<textarea name="virtual.frantic" rows="4">{{text.frantic}}</textarea></label>
+    {{/if}}
+    <label class="patd-block action">Archetype Actions<textarea name="virtual.actions" rows="7">{{text.actions}}</textarea></label>
+    <label>Styles <input type="text" name="virtual.styles" value="{{text.styles}}"/></label>
+    <label class="patd-block">Rules notes<textarea name="system.notes" rows="5">{{system.notes}}</textarea></label>
+    <label class="patd-block">Description<textarea name="system.description" rows="5">{{system.description}}</textarea></label>
+  {{/if}}
+
+  {{#if is.build}}
+    <label>Flavor <input type="text" name="system.flavor" value="{{system.flavor}}"/></label>
+    <label class="patd-block option">Build Abilities<textarea name="virtual.abilities" rows="5">{{text.abilities}}</textarea></label>
+  {{/if}}
+
+  {{#if is.super}}
+    <div class="patd-grid2"><label>Archetype <input type="text" name="system.archetype" value="{{system.archetype}}"/></label>
+      <label>Type <select name="system.superType">{{selectOptions superTypes selected=system.superType}}</select></label></div>
+    <label class="patd-block {{system.superType}}">Effect<textarea name="system.effect" rows="5">{{system.effect}}</textarea></label>
+    <label class="patd-block">Description<textarea name="system.description" rows="4">{{system.description}}</textarea></label>
+  {{/if}}
+
+  {{#if is.skill}}
+    <label class="patd-block skill">What you can do<textarea name="system.text" rows="4">{{system.text}}</textarea></label>
+    <label>Source <input type="text" name="system.source" value="{{system.source}}"/></label>
+  {{/if}}
+
+  {{#if is.action}}
+    <div class="patd-grid2"><label>Cost <input type="text" name="system.cost" value="{{system.cost}}" placeholder="3+ or 6+"/></label><label>Source <input type="text" name="system.source" value="{{system.source}}"/></label></div>
+    <label class="patd-block action">Effect (one line per Gate, e.g. “6+: …”)<textarea name="system.text" rows="6">{{system.text}}</textarea></label>
+  {{/if}}
+
+  {{#if is.path}}
+    <label class="patd-block option">When triggered…<textarea name="system.text" rows="3">{{system.text}}</textarea></label>
+  {{/if}}
+  </section>
+</div>

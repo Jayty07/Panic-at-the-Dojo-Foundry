@@ -1,0 +1,139 @@
+{
+  "id": "panic-at-the-dojo",
+  "title": "Panic at the Dojo: Patch'd Up",
+  "description": "An unofficial Foundry VTT system for Panic at the Dojo 2e (Patch'd Up) by Vel Mini. Stances built from Forms and Styles, Action Dice pools, tokens, health bars, the Initiative Meter, Bar Brawl bars that float over heads in isometric scenes, and Sequencer move animations.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "Unofficial community build",
+      "flags": {}
+    }
+  ],
+  "esmodules": [
+    "panic.mjs"
+  ],
+  "styles": [
+    "styles/panic.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "documentTypes": {
+    "Actor": {
+      "hero": {
+        "htmlFields": [
+          "biography"
+        ]
+      },
+      "warrior": {
+        "htmlFields": [
+          "biography"
+        ]
+      },
+      "boss": {
+        "htmlFields": [
+          "biography"
+        ]
+      },
+      "stooges": {
+        "htmlFields": [
+          "biography"
+        ]
+      }
+    },
+    "Item": {
+      "stance": {
+        "htmlFields": [
+          "notes"
+        ]
+      },
+      "form": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "style": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "archetype": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "build": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "super": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "skill": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "action": {
+        "htmlFields": [
+          "description"
+        ]
+      },
+      "path": {
+        "htmlFields": [
+          "description"
+        ]
+      }
+    }
+  },
+  "relationships": {
+    "recommends": [
+      {
+        "id": "barbrawl",
+        "type": "module",
+        "reason": "Multiple resource bars (HP, Health Bars, Shield) above each token."
+      },
+      {
+        "id": "isometric-perspective",
+        "type": "module",
+        "reason": "Isometric scenes. The system lifts token bars above the sprite's head."
+      },
+      {
+        "id": "sequencer",
+        "type": "module",
+        "reason": "Animated, interactive moves: shouted attack names, impacts, pushes, pulls and teleports."
+      },
+      {
+        "id": "JB2A_DnD5e",
+        "type": "module",
+        "reason": "Optional free animation library used by the Sequencer effects when present."
+      }
+    ]
+  },
+  "socket": true,
+  "grid": {
+    "distance": 1,
+    "units": "space",
+    "type": 1
+  },
+  "primaryTokenAttribute": "hp",
+  "secondaryTokenAttribute": "healthBars",
+  "initiative": "0",
+  "url": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry",
+  "manifest": "https://raw.githubusercontent.com/Jayty07/Panic-at-the-Dojo-Foundry/main/panic-at-the-dojo/system.json",
+  "download": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry/raw/main/dist/panic-at-the-dojo.zip",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "bugs": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry/issues"
+}

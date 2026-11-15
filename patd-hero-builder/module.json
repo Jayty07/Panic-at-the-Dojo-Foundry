@@ -1,0 +1,45 @@
+{
+  "id": "patd-hero-builder",
+  "title": "Panic at the Dojo: Hero Builder",
+  "description": "A step-by-step character creator for the Panic at the Dojo: Patch'd Up system. Follows the Hero Creation Checklist for Focused, Fused and Frantic Heroes: Archetypes, Stances (Style + Form), Freestyles and Banned Forms, Build, Skills, two-word description and Super Moves.",
+  "version": "1.0.0",
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "authors": [
+    {
+      "name": "Unofficial community build"
+    }
+  ],
+  "esmodules": [
+    "scripts/hero-builder.mjs"
+  ],
+  "styles": [
+    "styles/builder.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ],
+  "relationships": {
+    "systems": [
+      {
+        "id": "panic-at-the-dojo",
+        "type": "system",
+        "compatibility": {
+          "minimum": "1.0.0"
+        }
+      }
+    ]
+  },
+  "url": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry",
+  "manifest": "https://raw.githubusercontent.com/Jayty07/Panic-at-the-Dojo-Foundry/main/patd-hero-builder/module.json",
+  "download": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry/raw/main/dist/patd-hero-builder.zip",
+  "license": "LICENSE.txt",
+  "readme": "README.md",
+  "bugs": "https://github.com/Jayty07/Panic-at-the-Dojo-Foundry/issues"
+}

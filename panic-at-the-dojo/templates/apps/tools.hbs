@@ -1,0 +1,13 @@
+<div class="patd-tools-wrap">
+  <h3 class="comic">DOJO TOOLS</h3>
+  <button type="button" data-action="importContent"><i class="fa-solid fa-book"></i> Build rules compendiums (if missing)</button>
+  <button type="button" data-action="rebuildContent"><i class="fa-solid fa-book-skull"></i> Rebuild rules compendiums (overwrite)</button>
+  <button type="button" data-action="applyBars" {{#unless barbrawl}}disabled{{/unless}}><i class="fa-solid fa-bars-progress"></i> Apply Bar Brawl bars to all actors &amp; tokens</button>
+  <button type="button" data-action="openMeter"><i class="fa-solid fa-bolt"></i> Open Initiative Meter</button>
+  <ul class="patd-status">
+    <li class="{{#if barbrawl}}ok{{/if}}">Bar Brawl {{#if barbrawl}}active{{else}}not active{{/if}}</li>
+    <li class="{{#if iso}}ok{{/if}}">Isometric Perspective {{#if iso}}active{{else}}not active{{/if}}</li>
+    <li class="{{#if seq}}ok{{/if}}">Sequencer {{#if seq}}active{{else}}not active{{/if}}</li>
+    <li class="{{#if jb2a}}ok{{/if}}">JB2A animations {{#if jb2a}}active{{else}}not active (shapes and text are used instead){{/if}}</li>
+  </ul>
+</div>

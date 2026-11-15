@@ -1,0 +1,285 @@
+<div class="patd-actor-wrap">
+  {{!-- ============ HEADER: neon dojo sign over brick ============ --}}
+  <header class="patd-hero-head">
+    <img class="patd-portrait" src="{{actor.img}}" data-edit="img" data-action="editImage" alt="{{actor.name}}"/>
+    <div class="patd-head-main">
+      <input class="patd-name neon" type="text" name="name" value="{{actor.name}}" placeholder="Name"/>
+      <div class="patd-head-tags">
+        <span class="patd-chip type">{{typeLabel}}</span>
+        {{#if isHero}}
+          <select name="system.heroType" class="patd-chip select">{{selectOptions heroTypes selected=system.heroType}}</select>
+          <input class="patd-chip desc" type="text" name="system.description" value="{{system.description}}" placeholder="Two-word description"/>
+        {{/if}}
+        <span class="patd-chip weight" title="Cinematic Weight (set by the GM)"><i class="fa-solid fa-weight-hanging"></i> {{weight.label}}</span>
+        <label class="patd-chip lvl">LV <input type="number" name="system.level" value="{{system.level}}" min="1" max="10"/></label>
+        {{#if isHero}}<label class="patd-chip xp">XP <input type="number" name="system.xp" value="{{system.xp}}" min="0"/>{{#if system.nextXp}}<small>/{{system.nextXp}}</small>{{/if}}</label>{{/if}}
+        {{#if system.bonusDie}}<span class="patd-chip bonus" title="Bonus Die (rolled with your Action Dice)"><i class="fa-solid fa-dice-d20"></i> {{system.bonusDie}}</span>{{/if}}
+        {{#if builderAvailable}}<button type="button" class="patd-chip builder" data-action="openBuilder"><i class="fa-solid fa-wand-magic-sparkles"></i> Hero Builder</button>{{/if}}
+      </div>
+
+      {{!-- HP / bars --}}
+      <div class="patd-vitals">
+        <div class="patd-hpbar {{#if bleeding}}bleeding{{/if}} {{#if takenOut}}out{{/if}}">
+          <div class="patd-hpbar__fill" style="width: {{hpPct}}%"></div>
+          <div class="patd-hpbar__bleed" style="left: calc({{system.bleedValue}} / {{system.hp.max}} * 100%)" title="Bleed Value {{system.bleedValue}}"></div>
+          <div class="patd-hpbar__label">
+            HP <input type="number" name="system.hp.value" value="{{system.hp.value}}" min="0"/> / {{system.hp.max}}
+          </div>
+        </div>
+        <div class="patd-bars" title="Health Bars">
+          {{#each bars}}<span class="patd-pip {{#if filled}}on{{/if}} {{#if current}}cur{{/if}}"></span>{{/each}}
+          <input type="number" name="system.healthBars.value" value="{{system.healthBars.value}}" min="0" max="{{system.healthBars.max}}"/>/<input type="number" name="system.healthBars.max" value="{{system.healthBars.max}}" min="1" max="6"/>
+        </div>
+        <div class="patd-def">
+          <label class="patd-shield" title="Shield (cap 8)"><i class="fa-solid fa-shield"></i><input type="number" name="system.shield.value" value="{{system.shield.value}}" min="0" max="8"/></label>
+          <span class="patd-armor" title="Armor sources (stance + manual). Triggers used this turn: {{system.armor.triggers}}"><i class="fa-solid fa-helmet-safety"></i> {{armorSources}}</span>
+          <button type="button" class="patd-temp {{#if system.armor.temporary}}on{{/if}}" data-action="toggleTempArmor" title="Temporary Armor"><i class="fa-solid fa-shield-heart"></i> Temp</button>
+          <span class="patd-range" title="Current Range"><i class="fa-solid fa-ruler-horizontal"></i> {{range}}</span>
+        </div>
+        <div class="patd-flags">
+          {{#if bleeding}}<span class="patd-flag bleed">BLEEDING</span>{{/if}}
+          {{#if dizzy}}<span class="patd-flag dizzy">DIZZY</span>{{/if}}
+          {{#if takenOut}}<span class="patd-flag out">TAKEN OUT</span>{{/if}}
+          {{#if system.challenge}}<span class="patd-flag chal">CHALLENGED: {{system.challenge}}</span>{{/if}}
+          {{#if isStooges}}<label class="patd-flag stooge">STOOGES <input type="number" name="system.members.value" value="{{system.members.value}}" min="0"/>/<input type="number" name="system.members.max" value="{{system.members.max}}" min="1"/></label>{{/if}}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  {{!-- ============ TABS: page-corner slabs ============ --}}
+  <nav class="patd-tabs">
+    <a class="{{#if (eq tab 'fight')}}active{{/if}}" data-action="tab" data-tab="fight">Fight</a>
+    <a class="{{#if (eq tab 'stances')}}active{{/if}}" data-action="tab" data-tab="stances">Stances</a>
+    <a class="{{#if (eq tab 'hero')}}active{{/if}}" data-action="tab" data-tab="hero">{{#if isHero}}Hero{{else}}Traits{{/if}}</a>
+    <a class="{{#if (eq tab 'notes')}}active{{/if}}" data-action="tab" data-tab="notes">Notes</a>
+  </nav>
+
+  <section class="patd-tab-body">
+  {{#if (eq tab 'fight')}}
+    {{!-- Turn controls --}}
+    <div class="patd-turnbar">
+      <button type="button" data-action="startTurn" class="go"><i class="fa-solid fa-play"></i> Start Turn</button>
+      <button type="button" data-action="rollDice"><i class="fa-solid fa-dice"></i> Roll Dice</button>
+      <button type="button" data-action="endTurn" class="stop"><i class="fa-solid fa-hourglass-end"></i> End Turn</button>
+      <button type="button" data-action="takeDamage"><i class="fa-solid fa-burst"></i> Take Damage</button>
+      <button type="button" data-action="heal"><i class="fa-solid fa-heart-pulse"></i> Heal</button>
+      <button type="button" data-action="stanceCheck"><i class="fa-solid fa-scale-balanced"></i> Stance Check</button>
+      <button type="button" data-action="resetFight" title="Reset for a new fight"><i class="fa-solid fa-rotate"></i></button>
+    </div>
+
+    {{!-- Action pool --}}
+    <div class="patd-pool {{#if poolOver}}over{{/if}}">
+      <div class="patd-pool__label comic">ACTION POOL <small>{{pool.length}}/10</small></div>
+      <div class="patd-pool__nums">
+        {{#each pool}}
+          <span class="patd-num"><input class="patd-pool-edit" type="number" data-index="{{i}}" value="{{n}}" min="0"/><a data-action="poolRemove" data-index="{{i}}" title="Discard"><i class="fa-solid fa-xmark"></i></a></span>
+        {{else}}<span class="patd-empty">Empty — Start Turn to roll your Action Dice.</span>{{/each}}
+      </div>
+      <div class="patd-pool__ctl">
+        <button type="button" data-action="poolAdd" title="Add a number"><i class="fa-solid fa-plus"></i></button>
+        <button type="button" data-action="poolEmpty" title="Empty pool"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>
+
+    {{!-- Tokens --}}
+    <div class="patd-tokens">
+      {{#each basicTokens}}
+      <div class="patd-token basic t-{{key}}"><i class="{{icon}}"></i><span class="lbl">{{label}}</span>
+        <a data-action="tokenMinus" data-key="{{key}}">−</a><b>{{value}}</b><a data-action="tokenPlus" data-key="{{key}}">+</a></div>
+      {{/each}}
+      {{#each statusTokens}}
+      <div class="patd-token status t-{{key}}"><i class="{{icon}}"></i><span class="lbl">{{label}}</span>
+        <a data-action="tokenMinus" data-key="{{key}}">−</a><b>{{value}}</b><a data-action="tokenPlus" data-key="{{key}}">+</a></div>
+      {{/each}}
+      <div class="patd-token status t-challenge"><i class="fa-solid fa-hand-point-right"></i><span class="lbl">Challenge</span>
+        <input type="text" name="system.challenge" value="{{system.challenge}}" placeholder="Challenger"/></div>
+    </div>
+    <details class="patd-unique" {{#if system.customTokens.length}}open{{/if}}>
+      <summary>Unique tokens</summary>
+      <div class="patd-tokens small">
+        {{#each uniqueTokens}}
+        <div class="patd-token unique t-{{key}}"><i class="{{icon}}"></i><span class="lbl">{{label}}</span>
+          <a data-action="tokenMinus" data-key="{{key}}">−</a><b>{{value}}</b><a data-action="tokenPlus" data-key="{{key}}">+</a></div>
+        {{/each}}
+        {{#each system.customTokens}}
+        <div class="patd-token unique custom"><input class="patd-custom-token" data-index="{{@index}}" data-field="name" type="text" value="{{name}}"/>
+          <input class="patd-custom-token" data-index="{{@index}}" data-field="value" type="number" value="{{value}}" min="0" max="10"/><a data-action="customTokenDelete" data-index="{{@index}}"><i class="fa-solid fa-xmark"></i></a></div>
+        {{/each}}
+        <button type="button" data-action="customTokenAdd"><i class="fa-solid fa-plus"></i> Custom</button>
+      </div>
+    </details>
+
+    {{!-- Active stance --}}
+    {{#if stance}}
+    <article class="patd-stance-card active">
+      <header class="patd-stance-card__head"><span class="comic">{{stance.name}}</span><span class="patd-stance-range">Range: {{stance.range}}</span></header>
+      <div class="patd-dice-line"><span class="comic">ACTION DICE:</span>
+        {{#each stance.dice}}<span class="patd-gem {{shape}} {{#if purple}}purple{{else}}green{{/if}}">{{label}}</span>{{/each}}
+        {{#if system.bonusDie}}<span class="patd-gem bonus">{{system.bonusDie}}</span>{{/if}}
+      </div>
+      <div class="patd-ab-grid">
+        <div class="patd-box form"><h5>{{stance.sys.formAlt}} ({{stance.sys.formName}} Form)</h5>{{#each stance.sys.formAbilities}}<p>{{this}}</p>{{/each}}</div>
+        <div class="patd-box style"><h5>{{stance.sys.styleName}} {{#if stance.sys.freestyle}}Freestyle{{else}}Style{{/if}}</h5>{{#each stance.sys.styleAbilities}}<p>{{this}}</p>{{/each}}</div>
+      </div>
+    </article>
+    {{else}}
+    <p class="patd-empty big">No Stance. {{#if stances.length}}Pick one on Start Turn or the Stances tab.{{else}}Create Stances on the Stances tab{{#if builderAvailable}} or use the Hero Builder{{/if}}.{{/if}} Range is 1 without a Stance.</p>
+    {{/if}}
+
+    {{!-- Actions --}}
+    <h3 class="patd-section green">Actions</h3>
+    <div class="patd-actions">
+      {{#if stance}}{{#each stance.actions}}
+      <div class="patd-action">
+        <div class="patd-action__head"><span class="patd-cost">{{cost}}</span><span class="nm">{{name}}</span><small>{{source}}</small>
+          <button type="button" data-action="useAction" data-group="stance" data-idx="{{idx}}"><i class="fa-solid fa-hand-fist"></i> Use</button></div>
+        <div class="patd-action__body">{{#each lines}}<p class="{{#if (patdGate this)}}gate{{/if}}">{{this}}</p>{{/each}}</div>
+      </div>
+      {{/each}}{{/if}}
+      {{#each archetypeActions}}
+      <div class="patd-action arch">
+        <div class="patd-action__head"><span class="patd-cost">{{cost}}</span><span class="nm">{{name}}</span><small>{{source}}</small>
+          <button type="button" data-action="useAction" data-group="archetype" data-item-id="{{itemId}}" data-idx="{{idx}}"><i class="fa-solid fa-hand-fist"></i> Use</button></div>
+        <div class="patd-action__body">{{#each lines}}<p class="{{#if (patdGate this)}}gate{{/if}}">{{this}}</p>{{/each}}</div>
+      </div>
+      {{/each}}
+      {{#each customActions}}
+      <div class="patd-action" data-item-id="{{id}}">
+        <div class="patd-action__head"><span class="patd-cost">{{cost}}</span><span class="nm">{{name}}</span><small>Custom</small>
+          <button type="button" data-action="useAction" data-group="custom" data-item-id="{{id}}"><i class="fa-solid fa-hand-fist"></i> Use</button></div>
+        <div class="patd-action__body">{{#each lines}}<p>{{this}}</p>{{/each}}</div>
+      </div>
+      {{/each}}
+    </div>
+
+    {{#if supers.length}}
+    <h3 class="patd-section pink">Super Moves {{#if system.superUsed}}<small>(used this fight)</small>{{/if}}</h3>
+    <div class="patd-supers">
+      {{#each supers}}
+      <div class="patd-super {{#if alpha}}alpha{{else}}delta{{/if}}" data-item-id="{{id}}">
+        <div class="patd-super__head"><span>{{name}}</span><span class="patd-super__badge">{{#if alpha}}α{{else}}Δ{{/if}} Super</span>
+          <button type="button" data-action="useSuper" data-item-id="{{id}}"><i class="fa-solid fa-bolt"></i> Unleash</button></div>
+        <p>{{sys.effect}}</p>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+    <h3 class="patd-section green toggle" data-action="toggleBasic">Basic Actions <i class="fa-solid {{#if showBasic}}fa-caret-up{{else}}fa-caret-down{{/if}}"></i></h3>
+    {{#if showBasic}}
+    <div class="patd-actions basic">
+      {{#each basicActions}}
+      <div class="patd-action">
+        <div class="patd-action__head"><span class="patd-cost">{{cost}}</span><span class="nm">{{name}}</span>
+          <button type="button" data-action="useAction" data-group="basic" data-idx="{{idx}}"><i class="fa-solid fa-hand-fist"></i> Use</button></div>
+        <div class="patd-action__body">{{#each lines}}<p class="{{#if (patdGate this)}}gate{{/if}}">{{this}}</p>{{/each}}</div>
+      </div>
+      {{/each}}
+    </div>
+    {{/if}}
+  {{/if}}
+
+  {{#if (eq tab 'stances')}}
+    <h3 class="patd-section gold">Stances <a class="patd-add" data-action="itemCreate" data-type="stance"><i class="fa-solid fa-plus"></i></a></h3>
+    <p class="patd-note">A Stance is a Style + a Form: “Style Form Stance”. Drag Forms and Styles from the compendiums to keep references, or let the Hero Builder assemble Stances for you.</p>
+    <div class="patd-stance-list">
+      {{#each stances}}
+      <article class="patd-stance-card {{#if active}}active{{/if}}" data-item-id="{{id}}">
+        <header class="patd-stance-card__head">
+          <span class="comic">{{name}}</span><span class="patd-stance-range">Range: {{range}}</span>
+          <span class="patd-item-ctl">
+            {{#unless active}}<a data-action="setStance" data-item-id="{{id}}" title="Enter Stance"><i class="fa-solid fa-person-walking-arrow-right"></i></a>{{/unless}}
+            <a data-action="itemPost" title="Post to chat"><i class="fa-solid fa-comment"></i></a>
+            <a data-action="itemEdit" title="Edit"><i class="fa-solid fa-pen"></i></a>
+            <a data-action="itemDelete" title="Delete"><i class="fa-solid fa-trash"></i></a>
+          </span>
+        </header>
+        <div class="patd-dice-line">{{#each dice}}<span class="patd-gem {{shape}} {{#if purple}}purple{{else}}green{{/if}}">{{label}}</span>{{/each}}
+          {{#each sys.keywords}}<span class="patd-kw">{{this}}</span>{{/each}}</div>
+        <div class="patd-ab-grid">
+          <div class="patd-box form"><h5>{{sys.formAlt}} ({{sys.formName}})</h5>{{#each sys.formAbilities}}<p>{{this}}</p>{{/each}}</div>
+          <div class="patd-box style"><h5>{{sys.styleName}}</h5>{{#each sys.styleAbilities}}<p>{{this}}</p>{{/each}}</div>
+        </div>
+        <div class="patd-mini-actions">{{#each actions}}<span class="patd-mini"><b>{{cost}}</b> {{name}}</span>{{/each}}</div>
+      </article>
+      {{else}}<p class="patd-empty big">No Stances yet.</p>{{/each}}
+    </div>
+
+    <div class="patd-two-col">
+      <div>
+        <h3 class="patd-section blue">Forms <a class="patd-add" data-action="itemCreate" data-type="form"><i class="fa-solid fa-plus"></i></a></h3>
+        <ul class="patd-item-list">{{#each forms}}<li data-item-id="{{id}}"><img src="{{img}}"/><span>{{name}}</span><span class="patd-item-ctl"><a data-action="itemPost"><i class="fa-solid fa-comment"></i></a><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></li>{{/each}}</ul>
+      </div>
+      <div>
+        <h3 class="patd-section red">Styles <a class="patd-add" data-action="itemCreate" data-type="style"><i class="fa-solid fa-plus"></i></a></h3>
+        <ul class="patd-item-list">{{#each styles}}<li data-item-id="{{id}}"><img src="{{img}}"/><span>{{name}}</span><span class="patd-item-ctl"><a data-action="itemPost"><i class="fa-solid fa-comment"></i></a><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></li>{{/each}}</ul>
+      </div>
+    </div>
+  {{/if}}
+
+  {{#if (eq tab 'hero')}}
+    <h3 class="patd-section purple">Archetypes <a class="patd-add" data-action="itemCreate" data-type="archetype"><i class="fa-solid fa-plus"></i></a></h3>
+    {{#if frantic}}<p class="patd-note"><b>Frantic Versatility:</b> {{cfg.franticVersatility}}{{#if franticArch}} <br>Current Frantic Ability: <b>{{franticArch.name}}</b>{{/if}}</p>{{/if}}
+    {{#each archetypes}}
+    <article class="patd-option-card" data-item-id="{{id}}">
+      <header><span>{{#unless villain}}{{modeLabel}} {{/unless}}{{name}}</span>
+        {{#unless villain}}<select class="patd-archetype-mode" data-item-id="{{id}}">
+          <option value="focused" {{#if (eq sys.mode 'focused')}}selected{{/if}}>Focused</option>
+          <option value="fused" {{#if (eq sys.mode 'fused')}}selected{{/if}}>Fused</option>
+          <option value="frantic" {{#if (eq sys.mode 'frantic')}}selected{{/if}}>Frantic</option>
+        </select>{{/unless}}
+        <span class="patd-item-ctl"><a data-action="itemPost"><i class="fa-solid fa-comment"></i></a><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></header>
+      <div class="patd-option-card__body">{{#each abilities}}<p>{{this}}</p>{{/each}}</div>
+    </article>
+    {{else}}<p class="patd-empty">No Archetype yet.</p>{{/each}}
+
+    {{#if bleedInfo}}
+    <article class="patd-option-card bleed"><header><span>{{bleedInfo.name}}</span>{{#if system.bleedAbilityUsed}}<em>used this fight</em>{{/if}}</header>
+      <div class="patd-option-card__body"><p>{{bleedInfo.text}}</p></div></article>
+    {{/if}}
+
+    <h3 class="patd-section purple">Build <a class="patd-add" data-action="itemCreate" data-type="build"><i class="fa-solid fa-plus"></i></a></h3>
+    {{#if build}}
+    <article class="patd-option-card" data-item-id="{{build.id}}"><header><span>{{build.name}}</span><span class="patd-item-ctl"><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></header>
+      <div class="patd-option-card__body"><p><i>{{build.system.flavor}}</i></p>{{#each build.system.abilities}}<p>{{this}}</p>{{/each}}</div></article>
+    {{else}}<p class="patd-empty">No Build yet.</p>{{/if}}
+
+    <div class="patd-two-col">
+      <div>
+        <h3 class="patd-section orange">Skills <a class="patd-add" data-action="itemCreate" data-type="skill"><i class="fa-solid fa-plus"></i></a></h3>
+        {{#if isHero}}{{#if system.description}}<div class="patd-skill special"><b>{{system.description}}</b><small>Two-word description</small></div>{{/if}}{{/if}}
+        {{#each skills}}<div class="patd-skill" data-item-id="{{id}}"><b>{{name}}</b><span class="patd-item-ctl"><a data-action="itemPost"><i class="fa-solid fa-comment"></i></a><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span><p>{{system.text}}</p></div>{{/each}}
+      </div>
+      <div>
+        <h3 class="patd-section pink">Super Moves <a class="patd-add" data-action="itemCreate" data-type="super"><i class="fa-solid fa-plus"></i></a></h3>
+        {{#each supers}}<div class="patd-super {{#if alpha}}alpha{{else}}delta{{/if}}" data-item-id="{{id}}"><div class="patd-super__head"><span>{{name}}</span><span class="patd-item-ctl"><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></div><p>{{sys.effect}}</p></div>{{else}}<p class="patd-empty">Super Moves unlock at level 2.</p>{{/each}}
+        <h3 class="patd-section green">Custom Actions <a class="patd-add" data-action="itemCreate" data-type="action"><i class="fa-solid fa-plus"></i></a></h3>
+        {{#each customActions}}<div class="patd-skill" data-item-id="{{id}}"><b>{{cost}}: {{name}}</b><span class="patd-item-ctl"><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></div>{{/each}}
+        {{#unless isHero}}
+        <h3 class="patd-section purple">Warrior's Path <a class="patd-add" data-action="itemCreate" data-type="path"><i class="fa-solid fa-plus"></i></a></h3>
+        {{#each paths}}<div class="patd-skill" data-item-id="{{id}}"><b>{{name}}</b><span class="patd-item-ctl"><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span><p>{{system.text}}</p></div>{{/each}}
+        {{/unless}}
+      </div>
+    </div>
+
+    <h3 class="patd-section gold">Advancement</h3>
+    <table class="patd-adv"><tbody>{{#each benefits}}<tr class="{{#if reached}}reached{{/if}}"><td>{{level}}</td><td>{{text}}</td></tr>{{/each}}</tbody></table>
+    <div class="patd-misc">
+      <label>Extra HP per bar <input type="number" name="system.hp.bonus" value="{{system.hp.bonus}}"/></label>
+      <label>Manual Armor sources <input type="number" name="system.armor.sources" value="{{system.armor.sources}}" min="0"/></label>
+      <label><input type="checkbox" name="system.superUsed" {{checked system.superUsed}}/> Super used this fight</label>
+      <label><input type="checkbox" name="system.bleedAbilityUsed" {{checked system.bleedAbilityUsed}}/> Bleed Ability used</label>
+      <label><input type="checkbox" name="system.outOfPlay" {{checked system.outOfPlay}}/> Removed from play</label>
+    </div>
+  {{/if}}
+
+  {{#if (eq tab 'notes')}}
+    <h3 class="patd-section gold">Why are you fighting?</h3>
+    <label class="patd-field">Reason <input type="text" name="system.motive.reason" value="{{system.motive.reason}}" placeholder="“They insulted my hair.”"/></label>
+    <label class="patd-field">Goal <input type="text" name="system.motive.goal" value="{{system.motive.goal}}" placeholder="“Teach 'em respect.”"/></label>
+    <h3 class="patd-section gold">Biography</h3>
+    <textarea class="patd-bio" name="system.biography" rows="14">{{system.biography}}</textarea>
+  {{/if}}
+  </section>
+</div>
