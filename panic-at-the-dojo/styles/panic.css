@@ -428,3 +428,51 @@ details.patd-unique summary { cursor: pointer; font-weight: bold; color: var(--p
 
 /* Sidebar buttons */
 button.patd-meter-open, button.patd-import { margin: 4px; flex: 0 0 auto; width: calc(100% - 8px); font-family: var(--patd-comic); letter-spacing: .5px; background: linear-gradient(90deg, var(--patd-red), var(--patd-alpha)); color: #fff; border: 2px solid #000; }
+
+/* =====================================================================
+   Input sizing overrides — Foundry's core styles stretch inputs to 100%
+   width; keep every inline field on the sheet compact.
+   ===================================================================== */
+.patd.patd-sheet input[type="number"],
+.patd.patd-sheet .patd-head-tags input,
+.patd.patd-sheet .patd-token input,
+.patd.patd-sheet .patd-flags input,
+.patd.patd-sheet .patd-def input,
+.patd.patd-sheet .patd-bars input { flex: 0 0 auto !important; min-width: 0; box-sizing: border-box; padding: 0 2px; text-align: center; }
+
+/* HP bar: the bar stays visible, the number field is small and see-through */
+.patd.patd-sheet .patd-hpbar__label { pointer-events: none; gap: 6px; }
+.patd.patd-sheet .patd-hpbar__label input[type="number"] {
+  pointer-events: auto; width: 44px !important; height: 22px !important;
+  background: rgba(0,0,0,.35) !important; color: #fff !important; border: 1px solid rgba(255,255,255,.7) !important;
+  font-family: var(--patd-comic); font-size: 1.15rem; text-shadow: 1px 1px 0 #000; border-radius: 3px;
+}
+.patd.patd-sheet .patd-bars input[type="number"] { width: 34px !important; height: 22px !important; }
+.patd.patd-sheet .patd-def input[type="number"] { width: 34px !important; height: 20px !important; }
+.patd.patd-sheet .patd-chip input[type="number"] { width: 34px !important; height: 18px !important; background: transparent !important; border: none !important; }
+.patd.patd-sheet input.patd-chip.desc { width: 170px !important; flex: 0 0 170px !important; height: 24px !important; }
+.patd.patd-sheet select.patd-chip.select { width: auto !important; flex: 0 0 auto !important; height: 24px !important; }
+.patd.patd-sheet .patd-flags input[type="number"] { width: 32px !important; height: 18px !important; }
+.patd.patd-sheet .patd-num input[type="number"] { width: 44px !important; height: 44px !important; flex: 0 0 44px !important; }
+
+/* Tokens: label always readable */
+.patd.patd-sheet .patd-token { display: grid; grid-template-columns: 16px minmax(0, 1fr) 18px 22px 18px; align-items: center; gap: 3px; }
+.patd.patd-sheet .patd-token .lbl { min-width: 0; }
+.patd.patd-sheet .patd-token.t-challenge { grid-column: span 2; grid-template-columns: 16px auto minmax(0, 1fr); }
+.patd.patd-sheet .patd-token.t-challenge input { width: 100% !important; flex: 1 1 auto !important; height: 22px !important; text-align: left; }
+.patd.patd-sheet .patd-token.custom { grid-template-columns: minmax(0, 1fr) 40px 16px; }
+.patd.patd-sheet .patd-token.custom input[type="text"] { width: 100% !important; height: 22px !important; text-align: left; }
+.patd.patd-sheet .patd-token.custom input[type="number"] { width: 40px !important; height: 22px !important; }
+
+/* Stance pickers */
+.patd-stance-pick-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 10px; background: #fff8e0; border-bottom: 2px solid var(--patd-ink); }
+.patd.patd-sheet .patd-stance-pick-row select { flex: 1 1 150px !important; width: auto !important; height: 26px !important; min-width: 0; }
+.patd.patd-sheet .patd-stance-pick-row select.alt, .patd.patd-sheet .patd-stance-pick-row select.ctl { flex: 0 1 140px !important; }
+.patd-stance-pick-row label { font-weight: bold; font-size: .78rem; color: var(--patd-gold-dk); }
+.patd-stance-warn { padding: 3px 10px; background: var(--patd-red-lt2); color: #7a0000; font-weight: bold; font-size: .8rem; }
+.patd-picker { display: flex; gap: 8px; align-items: center; margin: 4px 0 8px; font-weight: bold; font-size: .82rem; }
+.patd.patd-sheet .patd-picker select { flex: 1 1 auto !important; width: auto !important; height: 26px !important; }
+.patd.patd-sheet .patd-num input[type="number"] { font-size: 1.6rem !important; font-family: var(--patd-comic); padding: 0 !important; }
+.patd.patd-sheet .patd-tokens { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.patd.patd-sheet .patd-option-card header select { flex: 0 0 auto !important; width: auto !important; height: 20px !important; }
+.patd.patd-sheet .patd-option-card header .patd-item-ctl { margin-left: auto; }

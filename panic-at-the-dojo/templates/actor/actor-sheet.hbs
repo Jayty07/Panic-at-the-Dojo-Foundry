@@ -181,8 +181,8 @@
   {{/if}}
 
   {{#if (eq tab 'stances')}}
-    <h3 class="patd-section gold">Stances <a class="patd-add" data-action="itemCreate" data-type="stance"><i class="fa-solid fa-plus"></i></a></h3>
-    <p class="patd-note">A Stance is a Style + a Form: “Style Form Stance”. Drag Forms and Styles from the compendiums to keep references, or let the Hero Builder assemble Stances for you.</p>
+    <h3 class="patd-section gold">Stances <a class="patd-add" data-action="itemCreate" data-type="stance" title="Add a Stance"><i class="fa-solid fa-plus"></i> Add</a></h3>
+    <p class="patd-note">A Stance is a Style + a Form: “Style Form Stance”. Pick them from the dropdowns; dice, range, Armor, abilities and Actions update automatically. Each Style and Form may only be used once.</p>
     <div class="patd-stance-list">
       {{#each stances}}
       <article class="patd-stance-card {{#if active}}active{{/if}}" data-item-id="{{id}}">
@@ -195,6 +195,22 @@
             <a data-action="itemDelete" title="Delete"><i class="fa-solid fa-trash"></i></a>
           </span>
         </header>
+        <div class="patd-stance-pick-row">
+          <label>Style</label>
+          <select class="patd-stance-pick" data-item-id="{{id}}" data-field="style"><option value="">— choose a Style —</option>
+            {{#each ../styleGroups}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}" {{#if (eq value ../../sys.styleName)}}selected{{/if}}>{{label}}</option>{{/each}}</optgroup>{{/each}}
+          </select>
+          <label>Form</label>
+          <select class="patd-stance-pick" data-item-id="{{id}}" data-field="form"><option value="">— choose a Form —</option>
+            {{#each ../formOptions}}<option value="{{value}}" {{#if (eq value ../sys.formName)}}selected{{/if}}>{{label}}</option>{{/each}}
+          </select>
+          {{#if altOptions.length}}<select class="patd-stance-pick alt" data-item-id="{{id}}" data-field="alt" title="Form name used in the Stance name">
+            {{#each altOptions}}<option value="{{this}}" {{#if (eq this ../sys.formAlt)}}selected{{/if}}>{{this}}</option>{{/each}}</select>{{/if}}
+          {{#if isControl}}<select class="patd-stance-pick ctl" data-item-id="{{id}}" data-field="control">
+            <option value="max" {{#if (eq sys.control "max")}}selected{{/if}}>Control: +3 max range</option>
+            <option value="min" {{#if (eq sys.control "min")}}selected{{/if}}>Control: min range 0</option></select>{{/if}}
+        </div>
+        {{#each warnings}}<div class="patd-stance-warn"><i class="fa-solid fa-triangle-exclamation"></i> {{this}}</div>{{/each}}
         <div class="patd-dice-line">{{#each dice}}<span class="patd-gem {{shape}} {{#if purple}}purple{{else}}green{{/if}}">{{label}}</span>{{/each}}
           {{#each sys.keywords}}<span class="patd-kw">{{this}}</span>{{/each}}</div>
         <div class="patd-ab-grid">
@@ -219,7 +235,9 @@
   {{/if}}
 
   {{#if (eq tab 'hero')}}
-    <h3 class="patd-section purple">Archetypes <a class="patd-add" data-action="itemCreate" data-type="archetype"><i class="fa-solid fa-plus"></i></a></h3>
+    <h3 class="patd-section purple">Archetypes <a class="patd-add" data-action="itemCreate" data-type="archetype" title="Blank Archetype"><i class="fa-solid fa-plus"></i></a></h3>
+    <div class="patd-picker"><span>Add Archetype</span><select class="patd-arch-add"><option value="">— choose —</option>
+      {{#each archOptions}}<optgroup label="{{label}}">{{#each options}}<option value="{{value}}">{{label}}</option>{{/each}}</optgroup>{{/each}}</select></div>
     {{#if frantic}}<p class="patd-note"><b>Frantic Versatility:</b> {{cfg.franticVersatility}}{{#if franticArch}} <br>Current Frantic Ability: <b>{{franticArch.name}}</b>{{/if}}</p>{{/if}}
     {{#each archetypes}}
     <article class="patd-option-card" data-item-id="{{id}}">
@@ -239,7 +257,9 @@
       <div class="patd-option-card__body"><p>{{bleedInfo.text}}</p></div></article>
     {{/if}}
 
-    <h3 class="patd-section purple">Build <a class="patd-add" data-action="itemCreate" data-type="build"><i class="fa-solid fa-plus"></i></a></h3>
+    <h3 class="patd-section purple">Build</h3>
+    <div class="patd-picker"><span>Build</span><select class="patd-build-pick"><option value="">— choose a Build —</option>
+      {{#each buildOptions}}<option value="{{value}}" {{#if (eq value ../build.name)}}selected{{/if}}>{{label}}</option>{{/each}}</select></div>
     {{#if build}}
     <article class="patd-option-card" data-item-id="{{build.id}}"><header><span>{{build.name}}</span><span class="patd-item-ctl"><a data-action="itemEdit"><i class="fa-solid fa-pen"></i></a><a data-action="itemDelete"><i class="fa-solid fa-trash"></i></a></span></header>
       <div class="patd-option-card__body"><p><i>{{build.system.flavor}}</i></p>{{#each build.system.abilities}}<p>{{this}}</p>{{/each}}</div></article>

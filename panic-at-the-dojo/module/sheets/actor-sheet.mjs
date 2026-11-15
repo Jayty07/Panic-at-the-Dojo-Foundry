@@ -1,11 +1,13 @@
 import { PATD, SYS, SYS_PATH } from "../config.mjs";
 import { useAction, useSuper, damageDialog, esc, postCard } from "../chat.mjs";
-import { rangeLabel, pickImage } from "../helpers/stance.mjs";
+import { rangeLabel, pickImage, buildStanceData } from "../helpers/stance.mjs";
+import { loadContent, buildItem, archetypeItem, villainItem } from "../content.mjs";
 import { socketRequest } from "../socket.mjs";
 
 const { HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 const { ActorSheetV2 } = foundry.applications.sheets;
 
+let CACHE_FORMS = null;
 const DIE_SHAPE = { d4: "tri", d6: "sq", d8: "dia", d10: "kite", d12: "pent", preset: "hex" };
 
 export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
@@ -58,6 +60,7 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const actor = this.actor, sys = actor.system;
     const w = game.patd.weight();
     const stance = actor.activeStance;
+    CACHE_FORMS = (await loadContent()).forms;
     const items = actor.items.contents.sort((a, b) => (a.sort || 0) - (b.sort || 0));
     const byType = (t) => items.filter(i => i.type === t);
 
@@ -65,7 +68,9 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const stanceView = (s) => ({
       id: s.id, name: s.name, img: s.img, active: s.id === sys.activeStance, sys: s.system,
       dice: s.system.dice.map(dieView), range: rangeLabel(s.system.range),
-      actions: s.system.actions.map((a, i) => ({ ...a, idx: i, lines: a.text.split("\n") }))
+      actions: s.system.actions.map((a, i) => ({ ...a, idx: i, lines: a.text.split("\n") })),
+      altOptions: (() => { const f = CACHE_FORMS?.find(x => x.name === s.system.formName); return f ? [f.name, ...f.altNames] : []; })(),
+      isControl: s.system.formName === "Control"
     });
 
     const archetypes = byType("archetype").map(a => ({
@@ -83,6 +88,34 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     const tokenRow = (keys) => keys.map(k => ({ key: k, label: PATD.tokenLabels[k], icon: PATD.tokenIcons[k], value: sys.tokens[k] ?? 0, max: PATD.tokenCap }));
     const bars = Array.from({ length: sys.healthBars.max }, (_, i) => ({ filled: i < sys.healthBars.value, current: i === sys.healthBars.value - 1 }));
     const hpPct = Math.round(100 * sys.hp.value / Math.max(1, sys.hp.max));
+
+    // Rules content for the Style / Form / Build / Archetype dropdowns
+    const content = await loadContent();
+    const owned = new Set(actor.archetypes.map(a => a.name));
+    const archSorted = [...content.archetypes.filter(a => owned.has(a.name)), ...content.archetypes.filter(a => !owned.has(a.name))];
+    const styleGroups = [
+      ...archSorted.map(a => ({ label: `${a.name}${owned.has(a.name) ? " (yours)" : ""}`, options: a.styles.map(x => ({ value: x.name, label: `${x.name} Style (Range ${x.range}, ${x.keyword})` })) })),
+      { label: "Freestyles (one max)", options: content.freestyles.map(x => ({ value: x.name, label: `${x.name} Freestyle (bans ${x.banned} Form)` })) }
+    ];
+    const formOptions = content.forms.map(f => ({ value: f.name, label: `${f.name} Form (${f.dice.map(d => d.die).join(" ")})` }));
+    const stanceItems = byType("stance");
+    const styleCount = {}, formCount = {};
+    for (const s of stanceItems) { styleCount[s.system.styleName] = (styleCount[s.system.styleName] ?? 0) + 1; formCount[s.system.formName] = (formCount[s.system.formName] ?? 0) + 1; }
+    const freeInUse = stanceItems.filter(s => s.system.freestyle);
+    const stanceWarnings = (s) => {
+      const w = [];
+      if (!s.system.styleName || !s.system.formName) w.push("Pick a Style and a Form to build this Stance.");
+      if (s.system.styleName && styleCount[s.system.styleName] > 1) w.push(`${s.system.styleName} Style is used in more than one Stance.`);
+      if (s.system.formName && formCount[s.system.formName] > 1) w.push(`${s.system.formName} Form is used in more than one Stance.`);
+      if (s.system.freestyle && freeInUse.length > 1) w.push("Only one Freestyle is allowed among all Stances.");
+      for (const fs of freeInUse) { const f = content.freestyles.find(x => x.name === fs.system.styleName); if (f && formCount[`${f.banned}`]) w.push(`${f.name} Freestyle bans ${f.banned} Form.`); }
+      return [...new Set(w)];
+    };
+    const buildOptions = content.builds.map(b => ({ value: b.name, label: b.name }));
+    const archOptions = [
+      { label: "Archetypes", options: content.archetypes.filter(a => !owned.has(a.name)).map(a => ({ value: `a:${a.name}`, label: `${a.name} (${a.keywords.join(" ")})` })) },
+      { label: "Villain Archetypes", options: content.villains.filter(v => !owned.has(v.name)).map(v => ({ value: `v:${v.name}`, label: v.name })) }
+    ];
 
     const bleedInfo = actor.type === "hero" ? PATD.bleedAbilities[sys.heroType] : null;
     const benefits = actor.type === "hero" ? PATD.heroBenefits[sys.heroType] : PATD.warriorBenefits;
@@ -106,8 +139,10 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       armorSources: actor.armorSources,
       bleedInfo, benefits: benefits?.map((b, i) => ({ level: i + 1, text: b, reached: i + 1 <= sys.level })),
       heroTypes: PATD.heroTypes, stanceOptions: byType("stance").map(s => ({ id: s.id, name: s.name })),
-      builderAvailable: !!game.modules.get("patd-hero-builder")?.active
+      builderAvailable: !!game.modules.get("patd-hero-builder")?.active,
+      styleGroups, formOptions, buildOptions, archOptions
     });
+    ctx.stances = ctx.stances.map(s => ({ ...s, warnings: stanceWarnings(actor.items.get(s.id)) }));
     return ctx;
   }
 
@@ -142,10 +177,69 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
       list[i][f] = f === "value" ? Math.max(0, Math.min(PATD.tokenCap, Number(ev.currentTarget.value) || 0)) : ev.currentTarget.value;
       await this.actor.update({ "system.customTokens": list });
     }));
+    el.querySelectorAll("select.patd-stance-pick").forEach(sel => sel.addEventListener("change", (ev) => {
+      ev.stopPropagation();
+      const { itemId, field } = ev.currentTarget.dataset;
+      return this.#rebuildStance(itemId, field, ev.currentTarget.value);
+    }));
+    el.querySelector("select.patd-build-pick")?.addEventListener("change", (ev) => { ev.stopPropagation(); return this.#setBuild(ev.currentTarget.value); });
+    el.querySelector("select.patd-arch-add")?.addEventListener("change", (ev) => { ev.stopPropagation(); return this.#addArchetype(ev.currentTarget.value); });
     el.querySelectorAll("select.patd-archetype-mode").forEach(sel => sel.addEventListener("change", async (ev) => {
       const item = this.actor.items.get(ev.currentTarget.dataset.itemId);
       await item?.update({ "system.mode": ev.currentTarget.value });
     }));
+  }
+
+  /* ------------------------------------------ */
+  /*  Stance / Build / Archetype pickers        */
+  /* ------------------------------------------ */
+
+  /** Rebuild a Stance's stats (dice, range, Armor, abilities, Actions) from its Style + Form. */
+  async #rebuildStance(itemId, field, value) {
+    const item = this.actor.items.get(itemId);
+    if (!item) return;
+    const c = await loadContent();
+    const cur = { style: item.system.styleName, form: item.system.formName, alt: item.system.formAlt, control: item.system.control ?? "max" };
+    cur[field] = value;
+    if (field === "form") cur.alt = value;
+    const form = c.forms.find(f => f.name === cur.form);
+    let style = null, archetype = "", freestyle = false;
+    for (const a of c.archetypes) { const s = a.styles.find(x => x.name === cur.style); if (s) { style = s; archetype = a.name; break; } }
+    if (!style) { const f = c.freestyles.find(x => x.name === cur.style); if (f) { style = f; freestyle = true; } }
+    if (!form || !style) {
+      // Only one half chosen so far: remember it and wait for the other.
+      return item.update({ name: `${cur.style || "?"} ${cur.alt || cur.form || "?"} Stance`, "system.styleName": cur.style, "system.formName": cur.form, "system.formAlt": cur.alt, "system.control": cur.control });
+    }
+    const data = buildStanceData(form, { ...style, archetype, freestyle }, { alt: cur.alt, control: cur.control });
+    data.system.control = cur.control;
+    data.system.notes = item.system.notes;
+    await item.update({ name: data.name, system: data.system });
+    // Warriors/Bosses gain the Fused Ability of their Style's Archetype automatically.
+    if (this.actor.type !== "hero" && archetype && !this.actor.archetypes.some(a => a.name === archetype)) {
+      const a = c.archetypes.find(x => x.name === archetype);
+      if (a) await this.actor.createEmbeddedDocuments("Item", [archetypeItem(a, "fused")]);
+    }
+    if (!this.actor.system.activeStance) await this.actor.update({ "system.activeStance": item.id });
+  }
+
+  async #setBuild(name) {
+    if (!name) return;
+    const c = await loadContent();
+    const b = c.builds.find(x => x.name === name);
+    if (!b) return;
+    const old = this.actor.items.filter(i => i.type === "build").map(i => i.id);
+    if (old.length) await this.actor.deleteEmbeddedDocuments("Item", old);
+    await this.actor.createEmbeddedDocuments("Item", [buildItem(b)]);
+  }
+
+  async #addArchetype(value) {
+    if (!value) return;
+    const c = await loadContent();
+    const [kind, name] = [value.slice(0, 1), value.slice(2)];
+    let data = null;
+    if (kind === "a") { const a = c.archetypes.find(x => x.name === name); if (a) data = archetypeItem(a, this.actor.type === "hero" ? this.actor.system.heroType : "fused"); }
+    else { const v = c.villains.find(x => x.name === name); if (v) data = villainItem(v); }
+    if (data) await this.actor.createEmbeddedDocuments("Item", [data]);
   }
 
   /* ------------------------------------------ */
@@ -242,6 +336,12 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
   static async #onItemCreate(event, target) {
     const type = target.dataset.type;
     const name = game.i18n.format("DOCUMENT.New", { type: game.i18n.localize(`TYPES.Item.${type}`) });
+    if (type === "stance") {
+      // Blank Stance: choose its Style and Form with the dropdowns on the card.
+      await this.actor.createEmbeddedDocuments("Item", [{ name: "New Stance", type, system: { styleName: "", formName: "", formAlt: "" } }]);
+      this._activeTab = "stances";
+      return this.render();
+    }
     const [item] = await this.actor.createEmbeddedDocuments("Item", [{ name, type }]);
     item?.sheet.render(true);
   }

@@ -156,6 +156,7 @@ export class StanceData extends foundry.abstract.TypeDataModel {
       styleName: str(),
       archetype: str(),
       freestyle: bool(false),
+      control: new F.StringField({ required: true, initial: "max", choices: ["max", "min"] }),
       keywords: new F.ArrayField(str()),
       dice: diceSchema(),
       range: new F.SchemaField({ min: int(1, { min: 0 }), max: int(1, { min: 0 }) }),
