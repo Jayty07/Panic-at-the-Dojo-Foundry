@@ -552,3 +552,11 @@ button.patd-meter-open, button.patd-import { margin: 4px; flex: 0 0 auto; width:
 .patd-npc-trait.build p { background: #fde3ff; }
 .patd-npc-traits .patd-misc a { cursor: pointer; font-weight: bold; color: var(--patd-purple); }
 .patd.patd-sheet .patd-npc-notes input[type="text"] { flex: 1 1 auto !important; width: auto !important; }
+
+/* Stance declaration */
+.patd-declare-wait { margin: 4px 0 6px; padding: 4px 8px; border: 2px solid var(--patd-ink); background: #fff3a0; font-size: .82rem; animation: patd-pulse 1s infinite alternate; }
+.patd-undeclared { color: var(--patd-red); font-weight: bold; font-style: normal; }
+.patd-declare-row { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px dashed #ccc; }
+.patd-declare-row img { width: 32px; height: 32px; object-fit: cover; border: 2px solid var(--patd-ink); border-radius: 4px; }
+.patd-declare-row b { flex: 0 0 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.patd-dialog .patd-declare-row select { flex: 1 1 auto; width: auto; }

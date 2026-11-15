@@ -26,14 +26,13 @@ export class PatdCombat extends Combat {
     const r = await super.startCombat();
     if (game.user.isGM) {
       await game.patd.meter.buildRound(this, 1);
-      // Combat Start: every fighter declares a Stance. Enemies declare first.
-      const order = ["stooges", "warrior", "boss", "hero"];
-      const list = this.combatants.contents.filter(c => c.actor).sort((a, b) => order.indexOf(a.actor.type) - order.indexOf(b.actor.type));
-      for (const c of list) await c.actor.update({ "system.declaredStance": !!c.actor.system.activeStance });
       await postCard({ actor: null, kind: "meter", title: "Combat Start", subtitle: game.patd.weight().label,
-        body: `<p>Apply Battle Parameters, draw the arena, place obstacles and units. Every fighter declares a Stance (Stooges, then Warriors, then Bosses, then Heroes) and keeps it for their first turn.</p>
+        body: `<p>Apply Battle Parameters, draw the arena, place obstacles and units.</p>
+          <p><b>Declare Stances:</b> Enemies first (Stooges, then Warriors, then Bosses), then Heroes. Everyone fights their first turn in the declared Stance.</p>
           <p class="patd-note">Heal Value ${game.patd.weight().heal} · Bleed Value ${game.patd.weight().bleed} · ${game.patd.weight().hp} HP per Health Bar · Super Moves per side per Round: ${game.patd.weight().supers}</p>` });
       game.patd.meterApp.render({ force: true });
+      // Don't block startCombat on dialogs.
+      Meter.declareStances(this);
     }
     return r;
   }
@@ -133,6 +132,39 @@ export const Meter = {
     await postCard({ actor: null, kind: "meter", title: `Round ${combat.round}`, body: notes.map(n => `<p>${esc(n)}</p>`).join("") });
   },
 
+  /* ---------- Combat Start: declare Stances (rulebook p. 65) ---------- */
+
+  async declareStances(combat = this.combat()) {
+    if (!combat || !game.user.isGM) return;
+    const rank = (c) => sideOf(c) === "heroes" ? 9 : ({ stooges: 0, warrior: 1, boss: 2 }[c.actor.type] ?? 3);
+    const list = combat.combatants.contents.filter(c => c.actor).sort((a, b) => rank(a) - rank(b));
+    for (const c of list) await c.actor.update({ "system.declaredStance": false });
+    const playerOwner = (c) => game.users.find(u => u.active && !u.isGM && c.actor.testUserPermission(u, "OWNER"));
+    // 1) Enemies declare first, in order: Stooges, Warriors, Bosses (the GM picks).
+    const enemies = list.filter(c => sideOf(c) !== "heroes" && !playerOwner(c));
+    if (enemies.length) await declareDialog(enemies.map(c => c.actor), { title: "Enemies declare their Stances", intro: "Stooges, then Warriors, then Bosses. Heroes declare after seeing these." });
+    // 2) Heroes declare. Connected players choose for themselves; the GM covers anyone else.
+    const heroes = list.filter(c => sideOf(c) === "heroes" || playerOwner(c));
+    const gmHeroes = heroes.filter(c => !playerOwner(c));
+    for (const c of heroes) {
+      const u = playerOwner(c);
+      if (u) socketRequest("declareStance", { actorUuid: c.actor.uuid, combatId: combat.id }, u.id);
+    }
+    if (gmHeroes.length) await declareDialog(gmHeroes.map(c => c.actor), { title: "Declare Stances (no connected player)", intro: "These fighters have no connected owner, so the GM declares for them." });
+    rerender();
+  },
+
+  /** Combatants that still need to declare a Stance. */
+  undeclared(combat = this.combat()) {
+    return (combat?.combatants.contents ?? []).filter(c => c.actor && !c.actor.system.declaredStance);
+  },
+
+  /** Number of turns this actor's combatant has taken this Round. */
+  turnsTaken(actor, combat = this.combat()) {
+    const c = combat?.combatants.find(x => x.actor?.id === actor.id);
+    return c ? (combat.meter?.used?.[c.id] ?? 0) : 0;
+  },
+
   async recordSuper(actorId) {
     const combat = this.combat(); if (!combat?.meter) return;
     const c = combat.combatants.find(x => x.actor?.id === actorId);
@@ -157,8 +189,63 @@ export const Meter = {
       return this.endTurn();
     }
     if (data.op === "super") return this.recordSuper(data.actorId);
+    if (data.op === "declared") rerender();
   }
 };
+
+const rerender = () => { if (game.patd?.meterApp?.rendered) game.patd.meterApp.render(); };
+
+/**
+ * Stance declaration dialog for one or more actors (GM for enemies, players for their Heroes).
+ * Shows Stances already declared this fight so later declarers can react.
+ */
+export async function declareDialog(actors, { title = "Declare your Stance", intro = "" } = {}) {
+  actors = actors.filter(a => a);
+  if (!actors.length) return;
+  const combat = game.combat;
+  const declared = (combat?.combatants.contents ?? []).filter(c => c.actor?.system.declaredStance && !actors.includes(c.actor))
+    .map(c => `<li><b>${esc(c.name)}</b>: ${esc(c.actor.activeStance?.name ?? "—")}</li>`).join("");
+  const rows = actors.map(a => {
+    const stances = a.stances;
+    const frantic = a.type === "hero" && a.system.heroType === "frantic";
+    const archs = a.archetypes.filter(x => x.system.mode === "frantic");
+    if (!stances.length) return `<div class="patd-declare-row"><img src="${a.img}"/><b>${esc(a.name)}</b><em>has no Stances — add one on the sheet.</em></div>`;
+    return `<div class="patd-declare-row"><img src="${a.img}"/><b>${esc(a.name)}</b>
+      <select name="s_${a.id}">${stances.map(s => `<option value="${s.id}" ${s.id === a.system.activeStance ? "selected" : ""}>${esc(s.name)} (Range ${s.system.range.min}${s.system.range.max !== s.system.range.min ? "-" + s.system.range.max : ""})</option>`).join("")}</select>
+      ${frantic && archs.length ? `<select name="f_${a.id}">${archs.map(x => `<option value="${x.id}" ${x.id === a.system.franticAbility ? "selected" : ""}>Frantic ${esc(x.name)}</option>`).join("")}</select>` : ""}</div>`;
+  }).join("");
+  const content = `<div class="patd-form patd-declare">
+    ${intro ? `<p>${esc(intro)}</p>` : ""}
+    ${declared ? `<p class="patd-note"><b>Already declared:</b></p><ul class="patd-reminders">${declared}</ul>` : ""}
+    ${rows}
+    <p class="patd-note">Rulebook p. 65: you must remain in this Stance until the start of your second turn.</p>
+  </div>`;
+  const res = await DialogV2.wait({
+    window: { title }, classes: ["patd-dialog"], position: { width: 520 }, content,
+    buttons: [{ action: "ok", label: "Declare", icon: "fa-solid fa-hand-fist", default: true, callback: (e, b) => {
+      const out = {};
+      for (const a of actors) out[a.id] = { stance: b.form.elements[`s_${a.id}`]?.value ?? "", frantic: b.form.elements[`f_${a.id}`]?.value ?? "" };
+      return out;
+    } }],
+    rejectClose: false
+  });
+  if (!res) return;
+  const lines = [];
+  for (const a of actors) {
+    const r = res[a.id]; if (!r?.stance) continue;
+    const upd = { "system.activeStance": r.stance, "system.declaredStance": true };
+    if (r.frantic) {
+      const st = a.items.get(r.stance);
+      upd["system.franticAbility"] = r.frantic;
+      upd["system.lastFrantic"] = { archetype: r.frantic, style: st?.system.styleName ?? "", form: st?.system.formName ?? "" };
+    }
+    await a.update(upd);
+    lines.push(`<li><b>${esc(a.name)}</b>: ${esc(a.items.get(r.stance)?.name ?? "")}</li>`);
+  }
+  if (lines.length) await postCard({ actor: actors.length === 1 ? actors[0] : null, kind: "meter", title: "Stances Declared", body: `<ul class="patd-reminders">${lines.join("")}</ul>` });
+  if (!game.user.isGM) socketRequest("meter", { op: "declared" });
+  rerender();
+}
 
 /* -------------------------------------------- */
 /*  Meter window                                */
@@ -178,7 +265,8 @@ export class InitiativeMeterApp extends HandlebarsApplicationMixin(ApplicationV2
       setup: InitiativeMeterApp.#onSetup,
       resetFighters: InitiativeMeterApp.#onReset,
       openSheet: InitiativeMeterApp.#onOpenSheet,
-      cycleSide: InitiativeMeterApp.#onCycleSide
+      cycleSide: InitiativeMeterApp.#onCycleSide,
+      declare: InitiativeMeterApp.#onDeclare
     }
   };
   static PARTS = { main: { template: `${SYS_PATH}/templates/apps/initiative-meter.hbs` } };
@@ -197,6 +285,7 @@ export class InitiativeMeterApp extends HandlebarsApplicationMixin(ApplicationV2
       bars: c.actor.system.healthBars.value, barsMax: c.actor.system.healthBars.max,
       out: c.actor.system.takenOut, bleeding: c.actor.system.bleeding,
       stance: c.actor.activeStance?.name ?? "—",
+      undeclared: combat.started && combat.round === 1 && !c.actor.system.declaredStance,
       canTake: !!slot && !slot.combatantId && sideOf(c) === slot.side && (m ? Meter.remaining(combat, c) > 0 : false) && (c.actor.isOwner || game.user.isGM),
       active: slot?.combatantId === c.id
     }));
@@ -211,6 +300,8 @@ export class InitiativeMeterApp extends HandlebarsApplicationMixin(ApplicationV2
       fighters, counts: Object.entries(counts).map(([k, v]) => ({ label: SIDES[k], v })),
       active: activeC ? { name: activeC.name, owner: activeC.actor?.isOwner || game.user.isGM } : null,
       fightGoesOn: combat.getFlag(SYS, "fightGoesOn") ?? false,
+      waitingDeclare: combat.started && combat.round === 1 && Meter.undeclared(combat).length > 0,
+      undeclaredNames: Meter.undeclared(combat).map(c => c.name).join(", "),
       supers: Object.entries(m?.supers ?? {}).map(([k, v]) => ({ label: SIDES[k], v, max: w.supers })),
       params: combat.getFlag(SYS, "params") ?? {}
     };
@@ -232,6 +323,8 @@ export class InitiativeMeterApp extends HandlebarsApplicationMixin(ApplicationV2
     if (game.user.isGM) return Meter.endTurn();
     socketRequest("meter", { op: "endTurn" });
   }
+  static async #onDeclare() { if (game.user.isGM) await Meter.declareStances(game.combat); }
+
   static async #onNewRound() { if (game.user.isGM) await Meter.newRound(); }
   static async #onRebuild() { if (game.user.isGM) await Meter.buildRound(game.combat); }
   static async #onReset() {

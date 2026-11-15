@@ -37,6 +37,12 @@ export function registerSocket(handlers) {
           await handlers.damageDialog(actor, msg.data.amount, msg.data.attackerName ? `${msg.data.attackerName}` : (from?.name ?? ""));
           break;
         }
+        case "declareStance": {
+          const actor = await fromUuid(msg.data.actorUuid);
+          if (!actor?.isOwner) return;
+          await handlers.declareStance?.(actor);
+          break;
+        }
         case "meter": {
           if (!game.user.isGM) return;
           await handlers.meter?.(msg.data, from);

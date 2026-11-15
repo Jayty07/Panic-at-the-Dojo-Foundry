@@ -2,7 +2,7 @@
   "id": "patd-hero-builder",
   "title": "Panic at the Dojo: Hero Builder",
   "description": "A step-by-step character creator for the Panic at the Dojo: Patch'd Up system. Follows the Hero Creation Checklist for Focused, Fused and Frantic Heroes: Archetypes, Stances (Style + Form), Freestyles and Banned Forms, Build, Skills, two-word description and Super Moves.",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "compatibility": {
     "minimum": "12",
     "verified": "14"

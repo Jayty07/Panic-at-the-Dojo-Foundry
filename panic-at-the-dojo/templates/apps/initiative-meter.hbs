@@ -12,6 +12,7 @@
       <span class="patd-weight"><i class="fa-solid fa-weight-hanging"></i> {{weight.label}} · Heal {{weight.heal}} · Bleed {{weight.bleed}}</span>
       {{#if isGM}}<span class="patd-meter-gm">
         <a data-action="setup" title="Fight Setup"><i class="fa-solid fa-sliders"></i></a>
+        <a data-action="declare" title="Ask everyone to declare their Stance again"><i class="fa-solid fa-person-rays"></i></a>
         <a data-action="rebuild" title="Rebuild this Round's slots"><i class="fa-solid fa-arrows-rotate"></i></a>
         <a data-action="newRound" title="Start next Round"><i class="fa-solid fa-forward"></i></a>
         <a data-action="resetFighters" title="Reset fighters"><i class="fa-solid fa-heart-circle-plus"></i></a>
@@ -19,6 +20,7 @@
     </header>
     {{#if params.victory}}<p class="patd-params">{{#if params.arena}}<b>Arena:</b> {{params.arena}} · {{/if}}{{#if params.tiltHeroes}}<b>Heroes tilted:</b> {{params.tiltHeroes}} · {{/if}}{{#if params.tiltEnemies}}<b>Enemies tilted:</b> {{params.tiltEnemies}} · {{/if}}<b>Victory:</b> {{params.victory}}{{#if fightGoesOn}} · The Fight Must Go On!{{/if}}</p>{{/if}}
 
+    {{#if waitingDeclare}}<div class="patd-declare-wait"><i class="fa-solid fa-hourglass-half"></i> <b>Declaring Stances</b> — waiting on: {{undeclaredNames}}</div>{{/if}}
     {{#unless started}}<p class="patd-note">Press <b>Begin Combat</b> in the Combat Tracker to build the meter.</p>{{/unless}}
 
     <ol class="patd-slots">
@@ -47,7 +49,7 @@
         <div class="patd-fighter__info">
           <b>{{name}}</b> <small class="patd-side-tag" {{#if ../isGM}}data-action="cycleSide" data-combatant-id="{{id}}" title="Click to change side"{{/if}}>{{sideLabel}}</small>
           <div class="patd-fighter__hp"><span class="bar" style="--pct: {{hp}}; --max: {{hpMax}}"></span>{{hp}}/{{hpMax}} · Bars {{bars}}/{{barsMax}} {{#if bleeding}}<em class="bleed">Bleeding</em>{{/if}}{{#if out}}<em class="out">Out</em>{{/if}}</div>
-          <small>{{stance}}</small>
+          <small>{{stance}}</small>{{#if undeclared}} <em class="patd-undeclared">not declared</em>{{/if}}
         </div>
         <span class="patd-turns" title="Turns left this Round">{{remaining}}</span>
         {{#if canTake}}<button type="button" data-action="take" data-combatant-id="{{id}}"><i class="fa-solid fa-hand-fist"></i> Take Turn</button>{{/if}}

@@ -442,7 +442,8 @@ export async function startTurnDialog(actor) {
   const isHero = actor.type === "hero";
   const frantic = isHero && sys.heroType === "frantic";
   const canBleed = isHero && sys.bleeding && !sys.bleedAbilityUsed && sys.hp.value > 0;
-  const firstTurn = (game.combat?.round ?? 0) === 1 && sys.declaredStance;
+  // Rulebook p. 66: skip Stance Select on your first turn of the first Round (multi-turn Bosses may change on their second).
+  const firstTurn = !!game.combat?.started && game.combat.round === 1 && sys.declaredStance && game.patd.meter.turnsTaken(actor) <= 1;
   const allies = (game.combat?.combatants.contents ?? []).map(c => c.actor).filter(a => a && a.id !== actor.id && !a.system.takenOut);
   const out = sys.takenOut;
   const archs = actor.archetypes.filter(a => a.system.mode === "frantic");

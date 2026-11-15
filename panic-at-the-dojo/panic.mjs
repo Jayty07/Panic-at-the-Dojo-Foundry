@@ -8,7 +8,7 @@ import { PatdActor } from "./module/documents/actor.mjs";
 import { PatdItem } from "./module/documents/item.mjs";
 import { PatdActorSheet, PatdNpcSheet, startTurnDialog, stanceCheckDialog } from "./module/sheets/actor-sheet.mjs";
 import { PatdItemSheet } from "./module/sheets/item-sheet.mjs";
-import { PatdCombat, Meter, InitiativeMeterApp } from "./module/combat.mjs";
+import { PatdCombat, Meter, InitiativeMeterApp, declareDialog } from "./module/combat.mjs";
 import { registerChatHooks, useAction, useSuper, damageDialog, postCard } from "./module/chat.mjs";
 import { registerSocket } from "./module/socket.mjs";
 import { BarBrawl } from "./module/integrations/barbrawl.mjs";
@@ -137,7 +137,7 @@ function registerSettings() {
 
 Hooks.once("ready", async () => {
   game.patd.meterApp = new InitiativeMeterApp();
-  registerSocket({ damageDialog, meter: (data, from) => Meter.handle(data, from) });
+  registerSocket({ damageDialog, meter: (data, from) => Meter.handle(data, from), declareStance: (actor) => declareDialog([actor], { title: `Declare ${actor.name}'s Stance`, intro: "Combat is starting. The Enemies have declared; now choose the Stance you'll fight your first turn in." }) });
   if (game.user.isGM && game.settings.get(SYS, "autoImport") && !game.settings.get(SYS, "contentImported")) {
     await content.importCompendiums({ quiet: false });
   }
