@@ -39,8 +39,12 @@
   color: #fff;
 }
 .patd.application .window-header .window-title { font-family: var(--patd-comic); letter-spacing: 1px; font-size: 1.15rem; }
-.patd input, .patd select, .patd textarea { color: var(--patd-ink); background: #fff; border: 1px solid #9a9aa8; border-radius: 3px; font-family: var(--patd-body); }
-.patd button { font-family: var(--patd-body); font-weight: bold; }
+.patd .window-content input, .patd .window-content select, .patd .window-content textarea { color: var(--patd-ink); background: #fff; border: 1px solid #9a9aa8; border-radius: 3px; font-family: var(--patd-body); }
+.patd .window-content button:not([class*="fa-"]) { font-family: var(--patd-body); font-weight: bold; }
+/* Window header controls (close, configure, etc.) are Font Awesome icons: never override their font. */
+.patd .window-header .header-control,
+.patd .window-header button[class*="fa-"],
+.patd .window-header a[class*="fa-"] { font-family: var(--fa-style-family, "Font Awesome 6 Pro"), "Font Awesome 6 Free", "Font Awesome 6 Pro" !important; font-weight: 900; color: #fff; }
 .patd .comic, .patd-card .comic { font-family: var(--patd-comic); letter-spacing: .5px; }
 
 /* ---------- Header: brick wall + neon sign ---------- */
