@@ -396,7 +396,7 @@ Hooks.once("init", () => {
   Handlebars.registerPartial("hbForm", FORM_PARTIAL);
   Handlebars.registerHelper("hbgt", (a, b) => Number(a) > Number(b));
   if (!Handlebars.helpers.eq) Handlebars.registerHelper("eq", (a, b) => a === b);
-  const load = foundry.applications.handlebars?.loadTemplates ?? globalThis.loadTemplates;
+  const load = foundry.applications.handlebars?.loadTemplates ?? (typeof loadTemplates !== "undefined" ? loadTemplates : undefined);
   load([`modules/${MOD}/templates/builder.hbs`]);
 });
 

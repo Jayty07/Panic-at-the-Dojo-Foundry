@@ -118,7 +118,7 @@ export class PatdActorSheet extends HandlebarsApplicationMixin(ActorSheetV2) {
     this.element.addEventListener("drop", async (ev) => {
       ev.preventDefault();
       if (!this.isEditable) return;
-      const TE = foundry.applications.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+      const TE = foundry.applications.ux?.TextEditor?.implementation ?? (typeof TextEditor !== "undefined" ? TextEditor : undefined);
       const data = TE.getDragEventData(ev);
       if (data?.type !== "Item") return;
       const item = await Item.implementation.fromDropData(data);

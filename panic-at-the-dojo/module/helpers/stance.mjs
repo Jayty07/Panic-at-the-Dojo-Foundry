@@ -50,7 +50,7 @@ export function rangeLabel(r) { return r.min === r.max ? `${r.min}` : `${r.min}-
 
 /** Image picker that works on v12 (AppV1 FilePicker) and v13+ (AppV2 FilePicker). */
 export function pickImage(doc) {
-  const FP = foundry.applications.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+  const FP = foundry.applications.apps?.FilePicker?.implementation ?? (typeof FilePicker !== "undefined" ? FilePicker : undefined);
   const fp = new FP({ type: "image", current: doc.img, callback: (path) => doc.update({ img: path }) });
   return fp.render(true);
 }

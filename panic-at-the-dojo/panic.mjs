@@ -78,13 +78,13 @@ Hooks.once("init", () => {
   CONFIG.specialStatusEffects.DEFEATED = "takenOut";
 
   // Sheets
-  const DSC = foundry.applications.apps?.DocumentSheetConfig ?? globalThis.DocumentSheetConfig;
+  const DSC = foundry.applications.apps?.DocumentSheetConfig ?? (typeof DocumentSheetConfig !== "undefined" ? DocumentSheetConfig : undefined);
   DSC.registerSheet(Actor, SYS, PatdActorSheet, { types: ["hero", "warrior", "boss", "stooges"], makeDefault: true, label: "PATD.SheetActor" });
   DSC.registerSheet(Item, SYS, PatdItemSheet, { makeDefault: true, label: "PATD.SheetItem" });
 
   registerSettings();
 
-  const load = foundry.applications.handlebars?.loadTemplates ?? globalThis.loadTemplates;
+  const load = foundry.applications.handlebars?.loadTemplates ?? (typeof loadTemplates !== "undefined" ? loadTemplates : undefined);
   load([`${SYS_PATH}/templates/actor/actor-sheet.hbs`, `${SYS_PATH}/templates/item/item-sheet.hbs`, `${SYS_PATH}/templates/apps/initiative-meter.hbs`, `${SYS_PATH}/templates/apps/tools.hbs`]);
 
   Handlebars.registerHelper("patdRange", (r) => r ? (r.min === r.max ? `${r.min}` : `${r.min}-${r.max}`) : "");

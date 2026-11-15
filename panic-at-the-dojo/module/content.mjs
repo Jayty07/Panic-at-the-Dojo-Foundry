@@ -11,7 +11,7 @@ export async function loadContent() {
   const out = {};
   await Promise.all(FILES.map(async f => {
     const path = `${SYS_PATH}/data/${f}.json`;
-    const route = foundry.utils.getRoute ?? globalThis.getRoute;
+    const route = foundry.utils.getRoute ?? (typeof getRoute !== "undefined" ? getRoute : undefined);
     const res = await fetch(route ? route(path) : path);
     out[f] = await res.json();
   }));
@@ -94,7 +94,7 @@ export async function importCompendiums({ force = false, quiet = false } = {}) {
   try {
     say(force ? "rebuilding rules compendiums…" : "checking rules compendiums…");
     const c = await loadContent();
-    const CC = foundry.documents?.collections?.CompendiumCollection ?? globalThis.CompendiumCollection;
+    const CC = foundry.documents?.collections?.CompendiumCollection ?? (typeof CompendiumCollection !== "undefined" ? CompendiumCollection : undefined);
     const data = {
       "patd-forms": c.forms.map(formItem),
       "patd-styles": [...c.archetypes.flatMap(a => a.styles.map(s => styleItem(s, a.name))), ...c.freestyles.map(freestyleItem)],
